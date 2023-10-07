@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 
-const CartDisplay = ({ cart, setCart }) => {
+const CartDisplay = ({ cart, setCart, quantityValue }) => {
 
     const [showCart, setShowCart] = useState([]);
 
@@ -46,11 +46,37 @@ const CartDisplay = ({ cart, setCart }) => {
                         <li key={product._id}>
                             <p>{product.name}</p>
                             <p>${product.price}</p>
-                            <p>{product.quantityAdded} pc</p>
-                            <button className="btn btn-primary" onClick={(event) => handleRemove(event, product)}>Delete</button>
-                        </li>
-                    ))}
-                </ul>
+
+                            <p>Quantity selected: {quantityValue}</p>
+
+
+   {/* Open the modal using document.getElementById('ID').showModal() method */}
+            <button
+                className="btn btn-primary"
+                onClick={() => document.getElementById(`my_modal_${product._id}`).showModal()}
+                >
+                Remove
+                </button>
+                <dialog id={`my_modal_${product._id}`} className="modal">
+                <div className="modal-box">
+                    <h3 className="font-bold text-lg">Remove "{product.name}" from cart?</h3>
+                    <div className="modal-action">
+                    <form method="dialog">
+                        {/* if there is a button in form, it will close the modal */}
+                        <button className="btn">Cancel</button>
+                        <button
+                        className="btn btn-error"
+                        onClick={(event) => handleRemove(event, product)}
+                        >
+                        Remove
+                        </button>
+                    </form>
+                    </div>
+                </div>
+                </dialog>
+                </li>
+                ))}
+            </ul>
            )}
         </div>
     )

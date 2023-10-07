@@ -8,44 +8,39 @@ const productSchema = new Schema({
         unique: true,
         minlength: 3,
         maxlength: 20,
-    },        
+    },
     name: {
         type: String,
         minlength: 3,
         maxlength: 20,
         required: true,
-        unique: true
+        unique: true,
     },
     inStock: {
         type: Number,
         min: 0,
-        required: true
+        required: true,
     },
     price: {
         type: Number,
         min: 0,
-        required: true
+        required: true,
     },
-    image: { 
-        type: String, 
+    image: {
+        type: String,
         match: /^(https?|ftp):\/\/[^\s/$.?#].[^\s]*$/,
-        maxLength: 200, 
+        maxLength: 200,
         required: true,
         unique: true,
     },
-    description: { 
+    description: {
         type: String,
         minLength: 2,
-        maxLength: 10, 
+        maxLength: 10,
         required: true,
     },
-    quantityAdded: {
-        type: Number,
-        min: 0,
-    }
 }, {
-    timestamps: true
-    }
-);
+    timestamps: true // Set the timestamps option here
+});
 
 module.exports = mongoose.model('Product', productSchema);
