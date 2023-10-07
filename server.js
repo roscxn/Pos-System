@@ -6,10 +6,26 @@ require("dotenv").config();
 require("./config/database");
 
 const app = express();
+const productRouter = require("./routes/productRouter.js")
+const cartRouter = require("./routes/cartRouter.js")
 
 app.use(logger('dev'));
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'dist')));
+
+app.use(
+  session({
+    secret: process.env.SECRET, // Replace with a secure secret key
+    resave: false,
+    saveUninitialized: true,
+    cookie: { secure: false }, // Set to true in production with HTTPS
+  })
+);
+
+
+app.use("/api/product", productRouter);
+app.use("/api/cart", cartRouter);
+
 
 
 app.get('/api', function(req, res) {
