@@ -11,6 +11,11 @@ const cartSchema = new Schema({
         quantity: {
             type: Number,
             min: 1,
+            required: true
+        },
+        itemPrice: {
+            type: Number,
+            min: 1,
             required: true,
         }
     }],

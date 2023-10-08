@@ -1,11 +1,8 @@
 import React, { useState, useEffect } from "react";
 
-const CartDisplay = ({ cart, setCart, isItemInCart, setIsItemInCart, quantityValues, setQuantityValues }) => {
+const CartDisplay = ({ cart, setCart, isItemInCart, setIsItemInCart, quantityValues, setQuantityValues, checkoutSuccess, setCheckoutSuccess}) => {
 
     const [showCart, setShowCart] = useState([]);
-    
-    const [saveCart, setSaveCart] = useState([])
-
 
     useEffect(() => {
       fetch("/api/cart")
@@ -32,7 +29,7 @@ const CartDisplay = ({ cart, setCart, isItemInCart, setIsItemInCart, quantityVal
       }
     }
   };
-  
+
     const handleRemove = async (event, cart) => {
         event.preventDefault();
         try {
@@ -63,57 +60,81 @@ const CartDisplay = ({ cart, setCart, isItemInCart, setIsItemInCart, quantityVal
               }
           };
 
-          const handleCheckOut = async (event, cart) => {
-            event.preventDefault();
-            try {
-              const response = await fetch("/api/cart/checkout",
-              {
-                method: "POST",
-                headers: {
-                  "Content-Type": "application/json",
-                },
-                body: JSON.stringify({ _id: cart._id, quantity: quantityValues, totalCartPrice }), 
-                }
-              )
-              if (response.ok) {
-                const data = await response.json();
-                setSaveCart(data);
-              } else {
-                console.error("Unsuccessful:", response.status, response.statusText);
+
+          const filteredCart = showCart.filter((cartItem) => quantityValues[cartItem._id] > 0);
+          let totalCartPrice = 0;
+          filteredCart.forEach((product) => {
+            const itemPrice = product.price * quantityValues[product._id];
+            totalCartPrice += itemPrice;
+          });
+
+
+      const handleCheckOut = async (event,) => {
+        event.preventDefault();
+
+        const cartItems = filteredCart.map((cart) => ({
+          product: cart._id,
+          quantity: quantityValues[cart._id],
+          itemPrice: cart.price * quantityValues[cart._id],
+        }));
+        
+        try {
+          const response = await fetch("/api/cart/checkout",
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ 
+              cartItems: cartItems,
+              totalCartPrice: totalCartPrice,
+            }),
+            
             }
-        } catch (error) {
-            console.error("An expected error occurred:", error);
+          )
+          if (response.ok) {
+            const data = await response.json();
+            setCart(data);
+            setCheckoutSuccess(true);
+            
+          } else {
+            console.error("Unsuccessful:", response.status, response.statusText);
         }
-      }
-
+    } catch (error) {
+        console.error("An expected error occurred:", error);
+    }
+  }
     
-    const filteredCart = showCart.filter((cartItem) => quantityValues[cartItem._id] > 0);
-    let totalCartPrice = 0;
-    filteredCart.forEach((product) => {
-      const itemPrice = product.price * quantityValues[product._id];
-      totalCartPrice += itemPrice;
-    });
-  
     return (
-        <div>
-            {filteredCart.length === 0 ? (
-                <p>No products in the cart</p>
-            ) : (
-                <ul>
-                    {filteredCart.map((product) => (
-                      <li key={product._id}>
-                      <p>{product.name}</p>
+      <div>
+          {checkoutSuccess ? (
+              <div className="alert alert-success">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                  <span>Check out success!</span>
+              </div>
+          ) : null}
 
-                      <p>Total item price: ${(product.price * quantityValues[product._id]).toFixed(2)}</p>
+          {checkoutSuccess || filteredCart.length === 0 ? null : (
+              <p>No products in the cart</p>
+          )}
 
-                      Qty:  <input
-                        type="number"
-                        min="0"
-                        max={product.inStock} // Set the maximum value to product.inStock
-                        value={quantityValues[product._id]}
-                        onChange={(e) => handleQuantityChange(parseInt(e.target.value), product._id, product)}
-                        className="input input-bordered input-primary w-20 h-9"
-                      />
+        {filteredCart.length === 0 ? null : (
+    <ul>
+        {filteredCart.map((product) => (
+            <li key={product._id}>
+                <p>{product.name}</p>
+
+                <p>Total item price: ${(product.price * quantityValues[product._id]).toFixed(2)}</p>
+
+                Qty:  <input
+                    type="number"
+                    min="0"
+                    max={product.inStock} 
+                    value={quantityValues[product._id]}
+                    onChange={(e) => handleQuantityChange(parseInt(e.target.value), product._id, product)}
+                    className="input input-bordered input-primary w-20 h-9"
+                />
+                    <p>In Stock: {product.inStock - quantityValues[product._id]}</p>
 
 
    {/* Open the modal using document.getElementById('ID').showModal() method */}

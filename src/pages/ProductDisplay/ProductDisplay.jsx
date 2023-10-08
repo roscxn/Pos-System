@@ -9,6 +9,9 @@ const ProductDisplay = () => {
 
     const [quantityValues, setQuantityValues] = useState({});
 
+    const [checkoutSuccess, setCheckoutSuccess] = useState(false); 
+
+
 
 // Fetch all products from DB 
 
@@ -68,11 +71,13 @@ const ProductDisplay = () => {
                 setIsItemInCart(true);
 
                 setQuantityValues({ ...quantityValues, [product._id]: 1 }); // Update the quantity for the added product
+                setCheckoutSuccess(false)
                 console.log("Added to cart:", data);
             } else if (response.ok && method === "PUT") {
                 const data = await response.json();
                 setCart(data);
                 setQuantityValues({ ...quantityValues, [product._id]: quantityValues[product._id] + 1 }); // Increment the quantity for the existing product
+                setCheckoutSuccess(false)
                 console.log("Added to cart:", data);
             } else {
                 console.error("Unsuccessful:", response.status, response.statusText);
@@ -81,8 +86,15 @@ const ProductDisplay = () => {
             console.error("An expected error occurred:", error);
         }
     };
+
+
+    const getProductStock = (productId) => {
+        const product = products.find((product) => product._id === productId);
+        const cartQuantity = quantityValues[productId] || 0;
+        return product.inStock - cartQuantity;
+    };
     
-        return (
+       return (
     <>
 
     <div className="carousel w-full">
@@ -107,7 +119,10 @@ const ProductDisplay = () => {
     <div className="card-body">
 
 
-      {isItemInCart && quantityValues[product._id] > 0 ? ( // Only display the indicator if quantity is greater than 0
+      {/* {isItemInCart && quantityValues[product._id] > 0 ? ( // Only display the indicator if quantity is greater than 0 */}
+        
+      {isItemInCart ? ( // Only display the indicator if quantity is greater than 0
+
         <div className="indicator">
           <span className="indicator-item badge badge-warning w-auto h-10 text-lg">
             x {quantityValues[product._id]}
@@ -119,7 +134,7 @@ const ProductDisplay = () => {
       <h2 className="card-title text-base">{product.name}</h2>
       <p className="text-base">${product.price.toFixed(2)}</p>
       <p className="text-base">{product.description}</p>
-      <p className="text-sm mt-4">In Stock: {product.inStock}</p>
+      <p className="text-sm mt-4">In Stock: {getProductStock(product._id)}</p>
     </div>
   </div>
 ))}
@@ -140,6 +155,8 @@ const ProductDisplay = () => {
             quantityValues={quantityValues}
             setQuantityValues={setQuantityValues}
 
+            checkoutSuccess={checkoutSuccess}
+            setCheckoutSuccess={setCheckoutSuccess}
             />
         
         </div>

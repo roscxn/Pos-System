@@ -10,5 +10,7 @@ router.delete('/remove', cartController.removeProduct);
 
 router.post('/checkout', cartController.checkOut)
 
+router.get('/history', cartController.history)
+
 
 module.exports = router;

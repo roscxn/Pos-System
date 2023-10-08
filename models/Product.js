@@ -12,7 +12,7 @@ const productSchema = new Schema({
     name: {
         type: String,
         minlength: 3,
-        maxlength: 20,
+        maxlength: 100,
         required: true,
         unique: true,
     },

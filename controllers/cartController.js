@@ -62,114 +62,70 @@ const removeProduct = async (req, res) => {
     try {
         const productIdToRemove = req.body._id;
         req.session.cart = req.session.cart.filter((productId) => productId !== productIdToRemove);
-        console.log("removeproduct controller:", productIdToRemove)
         res.json({ message: "Product deleted from cart successfully." });
     } catch (error) {
         res.status(400).json({ error: 'Error deleting product from cart' });
     }
 }
 
-// const checkOut = async (req, res) => {
-//     try {
-//         const cartData = req.session.cart
-//         const productsInCart = await Product.find({ _id: { $in: cartData } });
-
-// console.log("CARTDATa:", cartData)
-// console.log("productsInCart:", productsInCart)
-
-//         const cartItemAndQuantity = req.body.quantity;
-
-//         console.log("cartitem and quantity:", cartItemAndQuantity)
-
-//         const productIds = [];
-//         const productQuantities = [];
-
-//         for (const productId in cartItemAndQuantity) {
-//             if (cartItemAndQuantity.hasOwnProperty(productId)) {
-//               productIds.push(productId);
-//               productQuantities.push(cartItemAndQuantity[productId]);
-//             }
-//           }
-        
-//         const cartItems = []
-//         cartItems.push({ product: productsInCart._id, quantity: productQuantities});
-
-//         console.log("checkout cart REQ BODY CART ITEMS:", cartItems);
-
-//         const totalCartPrice = req.body.totalCartPrice
-
-//         console.log("total cart price:", totalCartPrice);
-
-
-//         const newCart = new Cart({
-//             cartItems,
-//             totalCartPrice
-//         });
-
-//         const savedCart = await newCart.save()
-//         res.status(201).json(savedCart);
-
-//     } catch (error) {
-//         res.status(400).json({ error: 'Error checking out cart' });
-
-//     }
-// }
-
 const checkOut = async (req, res) => {
     try {
-        const cartData = req.session.cart;
-        const productsInCart = await Product.find({ _id: { $in: cartData } });
+        const cartCheckOut = req.body;
 
-        console.log("CARTDATa:", cartData);
-        console.log("productsInCart:", productsInCart);
+        // Retrieve each cart item and update product stock
+        for (const cartItem of cartCheckOut.cartItems) {
+            const product = await Product.findById(cartItem.product);
 
-        const cartItemAndQuantity = req.body.quantity;
-
-        console.log("cartitem and quantity:", cartItemAndQuantity);
-
-        const productIds = [];
-        const productQuantities = [];
-
-        for (const productId in cartItemAndQuantity) {
-            if (cartItemAndQuantity.hasOwnProperty(productId)) {
-                productIds.push(productId);
-                productQuantities.push(cartItemAndQuantity[productId]);
+            // Check if the requested quantity is greater than available stock
+            if (cartItem.quantity > product.inStock) {
+                return res.status(400).json({
+                    error: `Not enough stock available for product: ${product.name}`,
+                });
             }
+
+            // Update product stock by subtracting the purchased quantity
+            product.inStock -= cartItem.quantity;
+
+            // Save the updated product information
+            await product.save();
         }
-
-        const cartItems = [];
-
-        // Construct cartItems array with separate objects
-        for (let i = 0; i < productIds.length; i++) {
-            cartItems.push({ product: productsInCart[i]._id, quantity: productQuantities[i] });
-        }
-
-        console.log("checkout cart REQ BODY CART ITEMS:", cartItems);
-
-        const totalCartPrice = req.body.totalCartPrice;
-
-        console.log("total cart price:", totalCartPrice);
 
         const newCart = new Cart({
-            cartItems,
-            totalCartPrice
+            cartItems: cartCheckOut.cartItems,
+            totalCartPrice: cartCheckOut.totalCartPrice,
         });
 
         const savedCart = await newCart.save();
-        res.status(201).json(savedCart);
 
+        req.session.cart = [];
+
+        res.status(201).json(savedCart);
     } catch (error) {
-        res.status(400).json({ error: 'Error checking out cart' });
+        console.error(error);
+        res.status(500).json({ error: 'Error checking out cart' });
+    }
+};
+
+
+const history = async (req, res) => {
+    try {
+        // Use populate to populate the 'product' field in cartItems
+        const transactions = await Cart.find().populate({
+            path: 'cartItems.product', // 'cartItems.product' should match the field name in your cartSchema
+            model: 'Product', // 'Product' should match the model name for your product schema
+        });
+
+        res.json(transactions);
+    } catch (error) {
+        console.log('Error fetching past transactions', error);
+        res.status(500).json({ error: 'Error fetching past transactions' });
     }
 }
-
-  
-
-  
 
 module.exports = {
     addToCart,
     displayCart,
     removeProduct,
-    checkOut
+    checkOut,
+    history
 }
