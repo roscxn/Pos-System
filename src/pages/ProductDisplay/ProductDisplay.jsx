@@ -38,18 +38,23 @@ const ProductDisplay = () => {
             
         });
     }, []);
-
-
-      
-  
-    
+   
 
     // Add new item to cart or update existing quantity
 
     const handleAdd = async (event, product) => {
-        event.preventDefault();
+        event.preventDefault();   
         try {
             const method = isItemInCart ? "PUT" : "POST";
+
+            const selectedQuantity = quantityValues[product._id] || 0;
+
+            // Check if the selected quantity exceeds the inStock value
+            if (selectedQuantity >= product.inStock) {
+              console.error("Quantity exceeds available stock");
+              return;
+            }
+        
             const response = await fetch("/api/cart/add", {
                 method,
                 headers: {

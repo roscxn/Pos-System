@@ -3,6 +3,8 @@ import React, { useState, useEffect } from "react";
 const CartDisplay = ({ cart, setCart, isItemInCart, setIsItemInCart, quantityValues, setQuantityValues }) => {
 
     const [showCart, setShowCart] = useState([]);
+    
+    const [saveCart, setSaveCart] = useState([])
 
 
     useEffect(() => {
@@ -14,10 +16,11 @@ const CartDisplay = ({ cart, setCart, isItemInCart, setIsItemInCart, quantityVal
   }, [cart]);
 
 
-
-  const handleQuantityChange = (newQuantity, productId) => {
+  const handleQuantityChange = (newQuantity, productId, product) => {
     // Ensure the new quantity is within the allowed range (0 to 10)
-    if (newQuantity >= 0 && newQuantity <= 10) {
+
+    if (newQuantity >= 0 && newQuantity <= product.inStock) {
+
       // Update the quantityValues state for the specific product ID
       setQuantityValues({
         ...quantityValues,
@@ -60,6 +63,29 @@ const CartDisplay = ({ cart, setCart, isItemInCart, setIsItemInCart, quantityVal
               }
           };
 
+          const handleCheckOut = async (event, cart) => {
+            event.preventDefault();
+            try {
+              const response = await fetch("/api/cart/checkout",
+              {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                },
+                body: JSON.stringify({ _id: cart._id, quantity: quantityValues, totalCartPrice }), 
+                }
+              )
+              if (response.ok) {
+                const data = await response.json();
+                setSaveCart(data);
+              } else {
+                console.error("Unsuccessful:", response.status, response.statusText);
+            }
+        } catch (error) {
+            console.error("An expected error occurred:", error);
+        }
+      }
+
     
     const filteredCart = showCart.filter((cartItem) => quantityValues[cartItem._id] > 0);
     let totalCartPrice = 0;
@@ -67,7 +93,7 @@ const CartDisplay = ({ cart, setCart, isItemInCart, setIsItemInCart, quantityVal
       const itemPrice = product.price * quantityValues[product._id];
       totalCartPrice += itemPrice;
     });
-
+  
     return (
         <div>
             {filteredCart.length === 0 ? (
@@ -75,20 +101,20 @@ const CartDisplay = ({ cart, setCart, isItemInCart, setIsItemInCart, quantityVal
             ) : (
                 <ul>
                     {filteredCart.map((product) => (
- <li key={product._id}>
- <p>{product.name}</p>
+                      <li key={product._id}>
+                      <p>{product.name}</p>
 
- <p>Total item price: ${(product.price * quantityValues[product._id]).toFixed(2)}</p>
+                      <p>Total item price: ${(product.price * quantityValues[product._id]).toFixed(2)}</p>
 
-Qty:  <input
-     type="number"
-     min="0"
-     max="10"
-     value={quantityValues[product._id]}
-     onChange={(e) => handleQuantityChange(parseInt(e.target.value, 10), product._id)}
+                      Qty:  <input
+                        type="number"
+                        min="0"
+                        max={product.inStock} // Set the maximum value to product.inStock
+                        value={quantityValues[product._id]}
+                        onChange={(e) => handleQuantityChange(parseInt(e.target.value), product._id, product)}
+                        className="input input-bordered input-primary w-20 h-9"
+                      />
 
-     className="input input-bordered input-primary w-20 h-9"
- />
 
    {/* Open the modal using document.getElementById('ID').showModal() method */}
             <button
@@ -119,11 +145,17 @@ Qty:  <input
 
       <p>Total Cart Price: ${totalCartPrice.toFixed(2)}</p>
 
+      <button className="btn btn-error" onClick={(event) => handleCheckOut(event, cart)}>Check Out</button>
+
             </ul> 
 
            )}
         </div>
     )
-}
+  }
+
+  
+    
+
 
 export default CartDisplay;

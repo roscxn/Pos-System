@@ -22,29 +22,20 @@ const addToCart = async (req, res) => {
             res.json({ message: "Product added to cart successfully." });
 
         } else {
-            // If the product is already in the cart, you can choose to update the quantity or respond with a message
-            console.log("add to cart update quantity controller:", req.body)
-            res.json({ message: "Product quantity update" });
 
+        // Check if the selected quantity is valid
+        const selectedQuantity = req.body.quantity || 1; // Default to 1 if quantity is not provided
+            if (selectedQuantity <= 0 || selectedQuantity >= productToCart.inStock) {
+            return res.status(400).json({ error: 'Invalid quantity' });
+        }   else {
+            res.json({ message: "Product quantity update" });
+        }
         }
     } catch (error) {
         console.log("Add to cart unsuccessful", error);
         res.status(400).json({ error: 'Add to cart unsuccessful' });
     }
 };
-
-// const displayCart = async (req, res) => {
-//     try {
-//         const cartData = req.session.cart;
-//         const productsInCart = await Product.find({ _id: { $in: cartData } });
-//         console.log("displayCart:", productsInCart)
-//         res.json(productsInCart);
-
-//     } catch (error) {
-//         console.error("Error fetching cart data:", error);
-//         res.status(400).json({ error: 'Error fetching cart data' });
-//     }
-// };
 
 const displayCart = async (req, res) => {
     try {
@@ -58,8 +49,7 @@ const displayCart = async (req, res) => {
   
       // Fetch the products in the cart based on the cartData
       const productsInCart = await Product.find({ _id: { $in: cartData } });
-      console.log("displayCart:", productsInCart);
-  
+
       // Send the products in the cart to the client
       res.json(productsInCart);
     } catch (error) {
@@ -67,8 +57,6 @@ const displayCart = async (req, res) => {
       res.status(400).json({ error: 'Error fetching cart data' });
     }
   };
-  
-
 
 const removeProduct = async (req, res) => {
     try {
@@ -81,8 +69,107 @@ const removeProduct = async (req, res) => {
     }
 }
 
+// const checkOut = async (req, res) => {
+//     try {
+//         const cartData = req.session.cart
+//         const productsInCart = await Product.find({ _id: { $in: cartData } });
+
+// console.log("CARTDATa:", cartData)
+// console.log("productsInCart:", productsInCart)
+
+//         const cartItemAndQuantity = req.body.quantity;
+
+//         console.log("cartitem and quantity:", cartItemAndQuantity)
+
+//         const productIds = [];
+//         const productQuantities = [];
+
+//         for (const productId in cartItemAndQuantity) {
+//             if (cartItemAndQuantity.hasOwnProperty(productId)) {
+//               productIds.push(productId);
+//               productQuantities.push(cartItemAndQuantity[productId]);
+//             }
+//           }
+        
+//         const cartItems = []
+//         cartItems.push({ product: productsInCart._id, quantity: productQuantities});
+
+//         console.log("checkout cart REQ BODY CART ITEMS:", cartItems);
+
+//         const totalCartPrice = req.body.totalCartPrice
+
+//         console.log("total cart price:", totalCartPrice);
+
+
+//         const newCart = new Cart({
+//             cartItems,
+//             totalCartPrice
+//         });
+
+//         const savedCart = await newCart.save()
+//         res.status(201).json(savedCart);
+
+//     } catch (error) {
+//         res.status(400).json({ error: 'Error checking out cart' });
+
+//     }
+// }
+
+const checkOut = async (req, res) => {
+    try {
+        const cartData = req.session.cart;
+        const productsInCart = await Product.find({ _id: { $in: cartData } });
+
+        console.log("CARTDATa:", cartData);
+        console.log("productsInCart:", productsInCart);
+
+        const cartItemAndQuantity = req.body.quantity;
+
+        console.log("cartitem and quantity:", cartItemAndQuantity);
+
+        const productIds = [];
+        const productQuantities = [];
+
+        for (const productId in cartItemAndQuantity) {
+            if (cartItemAndQuantity.hasOwnProperty(productId)) {
+                productIds.push(productId);
+                productQuantities.push(cartItemAndQuantity[productId]);
+            }
+        }
+
+        const cartItems = [];
+
+        // Construct cartItems array with separate objects
+        for (let i = 0; i < productIds.length; i++) {
+            cartItems.push({ product: productsInCart[i]._id, quantity: productQuantities[i] });
+        }
+
+        console.log("checkout cart REQ BODY CART ITEMS:", cartItems);
+
+        const totalCartPrice = req.body.totalCartPrice;
+
+        console.log("total cart price:", totalCartPrice);
+
+        const newCart = new Cart({
+            cartItems,
+            totalCartPrice
+        });
+
+        const savedCart = await newCart.save();
+        res.status(201).json(savedCart);
+
+    } catch (error) {
+        res.status(400).json({ error: 'Error checking out cart' });
+    }
+}
+
+  
+
+  
+
 module.exports = {
     addToCart,
     displayCart,
     removeProduct,
+    checkOut
 }
