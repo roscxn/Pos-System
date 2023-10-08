@@ -1,67 +1,45 @@
 import React, { useState, useEffect } from "react";
 
-const CartDisplay = ({ cart, setCart, quantityValue, setQuantityValue, setAddedToCart }) => {
+const CartDisplay = ({ cart, setCart, setIsItemInCart, quantityValues, setQuantityValues }) => {
 
     const [showCart, setShowCart] = useState([]);
-    // const [addedToCart, setAddedToCart] = useState(false);
+
 
     useEffect(() => {
-        fetch("/api/cart")
-            .then((response) => response.json())
-            .then((data) => {
-            setShowCart(data);
-            });
-    }, [cart]);
+      fetch("/api/cart")
+          .then((response) => response.json())
+          .then((data) => {
+              setShowCart(data);
+          });
+  }, [cart]);
 
 
-    
-    const handleQuantity = (e) => {
-        let newValue = parseInt(e.target.value, 10);
-      
-        if (!isNaN(newValue)) {
-          // Ensure the new value is within the allowed range (1 to 10)
-          if (newValue < 1) {
-            setAddedToCart(false)
-            setQuantityValue(0);
 
+  const handleQuantityChange = (newQuantity, productId) => {
+    // Ensure the new quantity is within the allowed range (0 to 10)
+    if (newQuantity >= 0 && newQuantity <= 10) {
+      // Update the quantityValues state for the specific product ID
+      setQuantityValues({
+        ...quantityValues,
+        [productId]: newQuantity,
+      });
+  
+      // Check if the new quantity is 0 and remove the item from the cart
+      if (newQuantity === 0) {
+        // Call a function to remove the item from the cart
+        // You can pass the product ID and any other necessary information here
+        
+        setIsItemInCart(false);
 
-            setShowCart([]); // Set addedToCart to false if newValue is less than 1
-          } else if (newValue > 10) {
-            newValue = 10;
-          }
-          setQuantityValue(newValue);
-        }
-      };
-
-
-    // const handleQuantity = (e, product) => {
-    //     let newValue = parseInt(e.target.value, 10);
-      
-    //     if (!isNaN(newValue)) {
-    //       // Ensure the new value is within the allowed range (1 to 10)
-    //       if (newValue < 1) {
-    //         newValue = 1;
-            
-    //         setAddedToCart(false); // Set addedToCart to false if newValue is less than 1
-    //       } else if (newValue > 10) {
-    //         newValue = 10;
-    //       }
-          
-    //       // Update the quantityValue state
-    //       setQuantityValue(newValue);
-      
-    //       // Check if the new value is 0 and remove the product from the cart
-    //       if (newValue === 0) {
-    //         const updatedCart = cart.filter((item) => item._id !== product._id);
-    //         setCart(updatedCart);
-    //         setShowCart(updatedCart); // Assuming you have a setShowCart function
-    //       }
-    //     }
-    //   };
-      
-      
-
-
+        // setQuantityValues({
+        //   ...quantityValues,
+        //   [productId]: 0,
+        // });
+        
+      }
+    }
+  };
+  
     const handleRemove = async (event, cart) => {
         event.preventDefault();
         try {
@@ -71,14 +49,18 @@ const CartDisplay = ({ cart, setCart, quantityValue, setQuantityValue, setAddedT
               headers: {
                 "Content-Type": "application/json",
               },
-              body: JSON.stringify({ _id: cart._id })  
+              body: JSON.stringify({ _id: cart._id, quantity: quantityValues[cart._id] })  
             });
             const data = await response.json();
             console.log(data.message);
             setCart(data);
 
-            setQuantityValue(0);
-            setAddedToCart(false);
+            setQuantityValues({
+              ...quantityValues,
+              [cart._id]: 0,
+            });
+            
+            setIsItemInCart(false);
 
             if (!response.ok) {
             throw new Error(data.message);
@@ -88,26 +70,28 @@ const CartDisplay = ({ cart, setCart, quantityValue, setQuantityValue, setAddedT
               }
           };
 
+    
+    const filteredCart = showCart.filter((cartItem) => quantityValues[cartItem._id] > 0);
 
 
     return (
         <div>
-            {showCart.length === 0 ? (
+            {filteredCart.length === 0 ? (
                 <p>No products in the cart</p>
             ) : (
                 <ul>
-                    {showCart.map((product) => (
+                    {filteredCart.map((product) => (
  <li key={product._id}>
  <p>{product.name}</p>
  <p>${product.price}</p>
- <p>Quantity: {quantityValue|| 0}</p>
- <input
+
+Qty:  <input
      type="number"
      min="0"
      max="10"
-     defaultValue="1"
-     value={quantityValue}
-     onChange={(e) => handleQuantity(e, product)}
+     value={quantityValues[product._id]}
+     onChange={(e) => handleQuantityChange(parseInt(e.target.value, 10), product._id)}
+
      className="input input-bordered input-primary w-20 h-9"
  />
 

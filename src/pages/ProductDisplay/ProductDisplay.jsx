@@ -5,50 +5,78 @@ const ProductDisplay = () => {
     const [products, setProducts] = useState([]);
     const [cart, setCart] = useState([]);
 
-    const [addedToCart, setAddedToCart] = useState(false);
+    const [isItemInCart, setIsItemInCart] = useState(false);
+
+    const [quantityValues, setQuantityValues] = useState({});
 
 
-    const [quantityValue, setQuantityValue] = useState(1);
-
+// Fetch all products from DB 
 
     useEffect(() => {
+        // Fetch products from the server
         fetch("/api/product/")
-            .then((response) => response.json())
-            .then((data) => {
+        .then((response) => response.json())
+        .then((data) => {
             setProducts(data);
+    
+            // Initialize quantityValues with default values for each product
+            const initialQuantityValues = {};
+            data.forEach((product) => {
+            initialQuantityValues[product._id] = 0; // You can set an initial quantity of 0
             });
+            setQuantityValues(initialQuantityValues);
+        });
+    
+        // Fetch cart items and check if products are in the cart
+        fetch("/api/cart/")
+        .then((response) => response.json())
+        .then((data) => {
+            const isItemInCart = data.some((item) =>
+            products.some((product) => product._id === item._id)
+            );
+            setIsItemInCart(isItemInCart);
+            
+        });
     }, []);
+
+
+      
+  
+    
+
+    // Add new item to cart or update existing quantity
 
     const handleAdd = async (event, product) => {
         event.preventDefault();
         try {
-            const response = await fetch("/api/cart/add", 
-            { 
-                method: "POST",
-                headers: { 
+            const method = isItemInCart ? "PUT" : "POST";
+            const response = await fetch("/api/cart/add", {
+                method,
+                headers: {
                     "Content-Type": "application/json",
                 },
-                body: JSON.stringify({ _id: product._id, quantity: quantityValue })
+                body: JSON.stringify({ _id: product._id, quantity: quantityValues[product._id] || 0 }), // Use the quantity from the quantityValues object
             });
-           
-            if (response.ok) {
+            if (response.ok && method === "POST") {
                 const data = await response.json();
                 setCart(data);
-                setQuantityValue(parseInt(quantityValue) + 1);
-                setAddedToCart(true);
+                setIsItemInCart(true);
+                setQuantityValues({ ...quantityValues, [product._id]: 1 }); // Update the quantity for the added product
+                console.log("Added to cart:", data);
+            } else if (response.ok && method === "PUT") {
+                const data = await response.json();
+                setCart(data);
+                setQuantityValues({ ...quantityValues, [product._id]: quantityValues[product._id] + 1 }); // Increment the quantity for the existing product
                 console.log("Added to cart:", data);
             } else {
-                console.error("Unsuccessful:", response.status, response.statusText)
+                console.error("Unsuccessful:", response.status, response.statusText);
             }
         } catch (error) {
             console.error("An expected error occurred:", error);
         }
-    }
-
+    };
     
-
-
-    return (
+        return (
     <>
 
     <div className="carousel w-full">
@@ -63,35 +91,33 @@ const ProductDisplay = () => {
             <div className="grid h-auto flex-grow card rounded-box place-items-center w-2/3"> 
 
 <div className="grid grid-cols-4 gap-6 mt-6 mb-6">
-  {products.map((product) => (
-    <div key={product._id} 
-        className="card card-compact bg-base-100 shadow-xl w-48 h-auto hover:bg-primary"
-        onClick={(event) => handleAdd(event, product)}
-        >
-        <div className="card-body">
 
-        {addedToCart ? (
-  <div className="indicator">
-    <span className="indicator-item badge badge-warning w-auto h-10 text-lg">
-      x {quantityValue}
-    </span>
-  </div>
-) : null}
+{products.map((product) => (
+  <div
+    key={product._id}
+    className="card card-compact bg-base-100 shadow-xl w-48 h-auto hover:bg-primary"
+    onClick={(event) => handleAdd(event, product)}
+  >
+    <div className="card-body">
 
-            
-            <img
-                src={product.image}
-                alt="Product Image"
-                className="w-48 h-36 rounded"
-                />
-            <h2 className="card-title text-base">{product.name}</h2>
-            <p className="text-base">${product.price.toFixed(2)}</p>
-            <p className="text-base">{product.description}</p>
-            <p className="text-sm mt-4">In Stock: {product.inStock}</p>
 
-            </div>
+      {isItemInCart && quantityValues[product._id] > 0 ? ( // Only display the indicator if quantity is greater than 0
+        <div className="indicator">
+          <span className="indicator-item badge badge-warning w-auto h-10 text-lg">
+            x {quantityValues[product._id]}
+          </span>
         </div>
-        ))}
+      ) : null}
+
+      <img src={product.image} alt="Product Image" className="w-48 h-36 rounded" />
+      <h2 className="card-title text-base">{product.name}</h2>
+      <p className="text-base">${product.price.toFixed(2)}</p>
+      <p className="text-base">{product.description}</p>
+      <p className="text-sm mt-4">In Stock: {product.inStock}</p>
+    </div>
+  </div>
+))}
+
     </div>
 </div>
 
@@ -101,10 +127,11 @@ const ProductDisplay = () => {
         <CartDisplay 
             cart={cart} 
             setCart={setCart} 
+            setIsItemInCart={setIsItemInCart}
+            quantityValues={quantityValues}
 
-            quantityValue={quantityValue} 
-            setQuantityValue={setQuantityValue}
-            setAddedToCart={setAddedToCart}
+            setQuantityValues={setQuantityValues}
+
             />
         
         </div>
