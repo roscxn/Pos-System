@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 
-const CartDisplay = ({ cart, setCart, setIsItemInCart, quantityValues, setQuantityValues }) => {
+const CartDisplay = ({ cart, setCart, isItemInCart, setIsItemInCart, quantityValues, setQuantityValues }) => {
 
     const [showCart, setShowCart] = useState([]);
 
@@ -23,19 +23,9 @@ const CartDisplay = ({ cart, setCart, setIsItemInCart, quantityValues, setQuanti
         ...quantityValues,
         [productId]: newQuantity,
       });
-  
       // Check if the new quantity is 0 and remove the item from the cart
       if (newQuantity === 0) {
-        // Call a function to remove the item from the cart
-        // You can pass the product ID and any other necessary information here
-        
-        setIsItemInCart(false);
-
-        // setQuantityValues({
-        //   ...quantityValues,
-        //   [productId]: 0,
-        // });
-        
+        setIsItemInCart({ ...isItemInCart, [productId]: false });
       }
     }
   };
@@ -60,7 +50,7 @@ const CartDisplay = ({ cart, setCart, setIsItemInCart, quantityValues, setQuanti
               [cart._id]: 0,
             });
             
-            setIsItemInCart(false);
+            setIsItemInCart({ ...isItemInCart, [cart._id]: false });
 
             if (!response.ok) {
             throw new Error(data.message);
@@ -72,7 +62,11 @@ const CartDisplay = ({ cart, setCart, setIsItemInCart, quantityValues, setQuanti
 
     
     const filteredCart = showCart.filter((cartItem) => quantityValues[cartItem._id] > 0);
-
+    let totalCartPrice = 0;
+    filteredCart.forEach((product) => {
+      const itemPrice = product.price * quantityValues[product._id];
+      totalCartPrice += itemPrice;
+    });
 
     return (
         <div>
@@ -83,7 +77,8 @@ const CartDisplay = ({ cart, setCart, setIsItemInCart, quantityValues, setQuanti
                     {filteredCart.map((product) => (
  <li key={product._id}>
  <p>{product.name}</p>
- <p>${product.price}</p>
+
+ <p>Total item price: ${(product.price * quantityValues[product._id]).toFixed(2)}</p>
 
 Qty:  <input
      type="number"
@@ -121,7 +116,11 @@ Qty:  <input
                 </dialog>
                 </li>
                 ))}
-            </ul>
+
+      <p>Total Cart Price: ${totalCartPrice.toFixed(2)}</p>
+
+            </ul> 
+
            )}
         </div>
     )

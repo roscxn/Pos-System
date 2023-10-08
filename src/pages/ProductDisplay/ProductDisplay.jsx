@@ -61,6 +61,7 @@ const ProductDisplay = () => {
                 const data = await response.json();
                 setCart(data);
                 setIsItemInCart(true);
+
                 setQuantityValues({ ...quantityValues, [product._id]: 1 }); // Update the quantity for the added product
                 console.log("Added to cart:", data);
             } else if (response.ok && method === "PUT") {
@@ -81,7 +82,7 @@ const ProductDisplay = () => {
 
     <div className="carousel w-full">
         <div id="slide1" className="carousel-item relative w-full">
-            <img src="https://ssecomm.s3-ap-southeast-1.amazonaws.com/ads/CSkdbOXIzYXgKk9cYxweFlRklni6Cx.jpg" className="w-full" />
+            <img src="https://ssecomm.s3-ap-southeast-1.amazonaws.com/ads/CSkdbOXIzYXgKk9cYxweFlRklni6Cx.jpg" className="w-full h-48 object-cover" />
             <div className="absolute flex justify-between transform -translate-y-1/2 left-5 right-5 top-1/2">
         </div>
      </div> 
@@ -127,9 +128,11 @@ const ProductDisplay = () => {
         <CartDisplay 
             cart={cart} 
             setCart={setCart} 
-            setIsItemInCart={setIsItemInCart}
-            quantityValues={quantityValues}
 
+            isItemInCart={isItemInCart}
+            setIsItemInCart={setIsItemInCart}
+
+            quantityValues={quantityValues}
             setQuantityValues={setQuantityValues}
 
             />
