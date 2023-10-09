@@ -52,7 +52,12 @@ const addToCart = async (req, res) => {
         const productsInCart = await Product.find({ _id: { $in: cartData } });
 
         // Check if the product is already in the cart
-        const isProductInCart = productsInCart.some(cartProduct => cartProduct._id.equals(productToCart._id));
+        // const isProductInCart = productsInCart.some(cartProduct => cartProduct._id.equals(productToCart._id));
+
+
+        const isProductInCart = productsInCart.find(
+            (item) => item._id.toString() === productToCart._id.toString()
+        );
 
         if (!isProductInCart) {
             // If the product is not in the cart, add it
@@ -68,7 +73,6 @@ const addToCart = async (req, res) => {
                     res.json({ message: "Update cart quantity" });
                 }
         }
-
         console.log("Current cart items:", cartData);
 
         // Update the session cart with the modified cartData
@@ -79,9 +83,6 @@ const addToCart = async (req, res) => {
         res.status(400).json({ error: 'Add to cart unsuccessful' });
     }
 }
-
-
-
 
 const displayCart = async (req, res) => {
     try {

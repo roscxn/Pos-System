@@ -6,6 +6,8 @@ const ProductDisplay2 = () => {
     const [products, setProducts] = useState([]);
     const [addToCart, setAddToCart] = useState([]);
     const [quantityValues, setQuantityValues] = useState({})
+    const [checkoutSuccess, setCheckoutSuccess] = useState(false)
+
 
     useEffect(() => {
         fetch("/api/product/")
@@ -36,6 +38,8 @@ const ProductDisplay2 = () => {
             if (response.ok) {
                 const data = await response.json();
                 setAddToCart(data);
+
+                setCheckoutSuccess(false);
 
                 const inStockLeft = product.inStock - quantityValues[product._id];
 
@@ -81,14 +85,15 @@ const ProductDisplay2 = () => {
   >
     <div className="card-body">
         
-      {/* { !checkoutSuccess && isItemInCart[product._id] && quantityValues[product._id] > 0 ? ( 
 
+    { quantityValues[product._id] <= 0 ? ( null 
+        ) : (
         <div className="indicator">
           <span className="indicator-item badge badge-warning w-auto h-10 text-lg">
             x {quantityValues[product._id]}
           </span>
         </div>
-      ) : null} */}
+        )}
 
       <img src={product.image} alt="Product Image" className="w-48 h-36 rounded" />
       <h2 className="card-title text-base">{product.name}</h2>
@@ -108,8 +113,12 @@ const ProductDisplay2 = () => {
         <CartDisplay2 
             addToCart={addToCart}
             setAddToCart={setAddToCart}
+
             quantityValues={quantityValues}
             setQuantityValues={setQuantityValues}
+
+            checkoutSuccess={checkoutSuccess}
+            setCheckoutSuccess={setCheckoutSuccess}
             />
         
         </div>

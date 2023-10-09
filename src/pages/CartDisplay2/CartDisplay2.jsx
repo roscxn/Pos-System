@@ -1,8 +1,16 @@
 import React, { useState, useEffect } from "react";
 
-const CartDisplay2 = ({ addToCart, setAddToCart, quantityValues, setQuantityValues }) => {
+const CartDisplay2 = ({ addToCart, setAddToCart, quantityValues, setQuantityValues, checkoutSuccess, setCheckoutSuccess }) => {
 
     const [showCart, setShowCart] = useState([]);
+
+    const filteredCart = showCart.filter((cartItem) => quantityValues[cartItem._id] > 0);
+    let totalCartPrice = 0;
+    filteredCart.forEach((product) => {
+      const itemPrice = product.price * quantityValues[product._id];
+      totalCartPrice += itemPrice;
+    });
+
 
     useEffect(() => {   
         fetch("/api/cart")
@@ -51,8 +59,6 @@ const CartDisplay2 = ({ addToCart, setAddToCart, quantityValues, setQuantityValu
               [cart._id]: 0,
             });
             
-            // setIsItemInCart({ ...isItemInCart, [cart._id]: false });
-
             if (!response.ok) {
             throw new Error(data.message);
             }
@@ -61,7 +67,56 @@ const CartDisplay2 = ({ addToCart, setAddToCart, quantityValues, setQuantityValu
               }
           };
 
+          const handleCheckOut = async (event, cart) => {
+            event.preventDefault();
+    
+            const cartItems = filteredCart.map((cart) => ({
+              product: cart._id,
+              quantity: quantityValues[cart._id],
+              itemPrice: cart.price * quantityValues[cart._id],
+            }));
+            
+            try {
+              const response = await fetch("/api/cart/checkout",
+              {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                },
+                body: JSON.stringify({ 
+                  cartItems: cartItems,
+                  totalCartPrice: totalCartPrice,
+                }),
+                
+                }
+              )
+              if (response.ok) {
+                setAddToCart([])
+                setCheckoutSuccess(true)
+                
+                setQuantityValues({
+                  ...quantityValues,
+                  [cart._id]: 0,
+                });  
+
+                console.log("Check out successful");
+                
+              } else {
+                console.error("Unsuccessful:", response.status, response.statusText);
+            }
+        } catch (error) {
+            console.error("An expected error occurred:", error);
+        }
+      }
+          
+
     return (
+        <>
+       
+        { showCart.length === 0 ? (<p>No products in cart</p> 
+        
+        ) : (
+
         <div>
         <table>
           <thead>
@@ -131,16 +186,31 @@ const CartDisplay2 = ({ addToCart, setAddToCart, quantityValues, setQuantityValu
           </tbody>
         </table>
   
-        {/* <p>Total Cart Price: ${totalCartPrice.toFixed(2)}</p> */}
+        <p>Total Cart Price: ${totalCartPrice.toFixed(2)}</p>
   
         <button
           className="btn btn-error"
-        //   onClick={(event) => handleCheckOut(event, cart)}
+          onClick={(event) => handleCheckOut(event, showCart)}
         >
           Check Out
         </button>
       </div>
-    )
-}
+        )
+    }
+
+      { !checkoutSuccess  ? (null
+      
+      ) : (
+
+        <div className="alert alert-success w-96">
+        <svg xmlns="http://www.w3.org/2000/svg" className="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+        <span>Check out success!</span>
+        </div>
+
+            )
+        }
+        </>
+    
+    )};
 
 export default CartDisplay2
