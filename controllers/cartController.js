@@ -1,6 +1,43 @@
 const Product = require('../models/Product');
 const Cart = require('../models/Cart');
 
+// const addToCart = async (req, res) => {
+//     try {
+//         const productToCart = await Product.findById(req.body._id)
+
+//         // Fetch products currently in the cart
+
+//         const cartData = req.session.cart;
+//         const productsInCart = await Product.find({ _id: { $in: cartData } });
+
+//         // Check if the product is already in the cart
+//         const existingCartItem = productsInCart.find(
+//             (item) => item._id.toString() === productToCart._id.toString()
+//         );
+
+//         if (!existingCartItem) {
+//             // If the product is not in the cart, add it with the selected quantity
+//             req.session.cart = req.session.cart || [];
+//             req.session.cart.push(productToCart._id);
+//             res.json({ message: "Product added to cart successfully." });
+
+//         } else {
+
+//         // Check if the selected quantity is valid
+//         const selectedQuantity = req.body.quantity || 1; // Default to 1 if quantity is not provided
+//             if (selectedQuantity <= 0 || selectedQuantity >= productToCart.inStock) {
+//             return res.status(400).json({ error: 'Invalid quantity' });
+//         }   else {
+//             res.json({ message: "Product quantity update" });
+//         }
+//         }
+//     } catch (error) {
+//         console.log("Add to cart unsuccessful", error);
+//         res.status(400).json({ error: 'Add to cart unsuccessful' });
+//     }
+// };
+
+
 const addToCart = async (req, res) => {
     try {
         const productToCart = await Product.findById(req.body._id)
@@ -10,10 +47,14 @@ const addToCart = async (req, res) => {
         const cartData = req.session.cart;
         const productsInCart = await Product.find({ _id: { $in: cartData } });
 
+
         // Check if the product is already in the cart
         const existingCartItem = productsInCart.find(
             (item) => item._id.toString() === productToCart._id.toString()
         );
+
+
+        console.log("add to cart:", existingCartItem)
 
         if (!existingCartItem) {
             // If the product is not in the cart, add it with the selected quantity
