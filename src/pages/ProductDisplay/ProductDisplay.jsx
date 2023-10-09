@@ -1,105 +1,70 @@
 import React, { useState, useEffect } from "react";
-import CartDisplay from '../CartDisplay/CartDisplay';
+import CartDisplay from "../CartDisplay/CartDisplay"
 
 const ProductDisplay = () => {
+
     const [products, setProducts] = useState([]);
-    const [cart, setCart] = useState([]);
+    const [addToCart, setAddToCart] = useState([]);
+    const [quantityValues, setQuantityValues] = useState({})
+    const [checkoutSuccess, setCheckoutSuccess] = useState(false)
 
-    const [isItemInCart, setIsItemInCart] = useState({});
-
-    const [quantityValues, setQuantityValues] = useState({});
-
-    const [checkoutSuccess, setCheckoutSuccess] = useState(false); 
-
-
-// Fetch all products from DB 
 
     useEffect(() => {
-        // Fetch products from the server
         fetch("/api/product/")
-        .then((response) => response.json())
-        .then((data) => {
-            setProducts(data);
-    
-            // Initialize quantityValues with default values for each product
+          .then((response) => response.json())
+          .then((data) => {
+            // Create an initial quantityValues object with product IDs as keys and 0 as initial value
             const initialQuantityValues = {};
             data.forEach((product) => {
-            initialQuantityValues[product._id] = 0; // You can set an initial quantity of 0
+              initialQuantityValues[product._id] = 0;
             });
-            setQuantityValues(initialQuantityValues);
-        });
     
-        // Fetch cart items and check if products are in the cart
-
-        fetch("/api/cart/")
-        .then((response) => response.json())
-        .then((data) => {
-            const isItemInCart = data.some((item) =>
-            products.some((product) => product._id === item._id)
-            );
-            setIsItemInCart(isItemInCart);
-        });
-    }, []);
-   
-
-    // Add new item to cart or update existing quantity
+            // Set products and quantityValues state
+            setProducts(data);
+            setQuantityValues(initialQuantityValues);
+          });
+      }, []);
 
     const handleAdd = async (event, product) => {
-        event.preventDefault();   
+        event.preventDefault();
         try {
-            const method = isItemInCart ? "PUT" : "POST";
-
-            const selectedQuantity = quantityValues[product._id] || 0;
-
-            // Check if the selected quantity exceeds the inStock value
-            if (selectedQuantity >= product.inStock) {
-              console.error("Quantity exceeds available stock");
-              return;
-            }
-        
-            const response = await fetch("/api/cart/add", {
-                method,
+            const response = await fetch('/api/cart/addToCart', {
+                method: 'POST',
                 headers: {
-                    "Content-Type": "application/json",
+                    'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({ _id: product._id, quantity: quantityValues[product._id] || 0 }), // Use the quantity from the quantityValues object
+                body: JSON.stringify({ _id: product._id, quantity: quantityValues }),
             });
-            if (response.ok && method === "POST") {
+            if (response.ok) {
                 const data = await response.json();
-                setCheckoutSuccess(false)
-                setCart(data);
-                setIsItemInCart({ ...isItemInCart, [product._id]: true });
+                setAddToCart(data);
 
-                setQuantityValues({ ...quantityValues, [product._id]: 1 }); // Update the quantity for the added product
-                
-                console.log("Added to cart:", data);
-            } else if (response.ok && method === "PUT") {
-                const data = await response.json();
-                setCheckoutSuccess(false)
-                setCart(data);
-                setIsItemInCart({ ...isItemInCart, [product._id]: true });
-                setQuantityValues({ ...quantityValues, [product._id]: quantityValues[product._id] + 1 }); // Increment the quantity for the existing product
-                
-                console.log("Added to cart:", data);
+                setCheckoutSuccess(false);
+
+                const inStockLeft = product.inStock - quantityValues[product._id];
+
+                if (inStockLeft > 0) {
+                    setQuantityValues((prevQuantityValues) => ({
+                      ...prevQuantityValues,
+                      [product._id]: (prevQuantityValues[product._id] || 0) + 1,
+                    }));
+                  } else {
+                    console.log("Maximum quantity reached")
+                  }
+             
+                console.log("Added to cart:", data);      
+
             } else {
-                console.error("Unsuccessful:", response.status, response.statusText);
+                console.error("Add to cart unsuccessful:", response.status, response.statusText);
             }
         } catch (error) {
-            console.error("An expected error occurred:", error);
+            console.error('An unexpected error occurred:', error);
         }
     };
 
-
-    const getProductStock = (productId) => {
-        const product = products.find((product) => product._id === productId);
-        const cartQuantity = quantityValues[productId] || 0;
-        return product.inStock - cartQuantity;
-    };
-    
-       return (
-    <>
-
-    <div className="carousel w-full">
+    return (
+        <>
+           <div className="carousel w-full">
         <div id="slide1" className="carousel-item relative w-full">
             <img src="https://ssecomm.s3-ap-southeast-1.amazonaws.com/ads/CSkdbOXIzYXgKk9cYxweFlRklni6Cx.jpg" className="w-full h-48 object-cover" />
             <div className="absolute flex justify-between transform -translate-y-1/2 left-5 right-5 top-1/2">
@@ -120,20 +85,21 @@ const ProductDisplay = () => {
   >
     <div className="card-body">
         
-      { !checkoutSuccess && isItemInCart[product._id] && quantityValues[product._id] > 0 ? ( 
 
+    {!checkoutSuccess && quantityValues[product._id] > 0 ? (
         <div className="indicator">
-          <span className="indicator-item badge badge-warning w-auto h-10 text-lg">
+            <span className="indicator-item badge badge-warning w-auto h-10 text-lg">
             x {quantityValues[product._id]}
-          </span>
+            </span>
         </div>
-      ) : null}
+        ) : null}
 
       <img src={product.image} alt="Product Image" className="w-48 h-36 rounded" />
       <h2 className="card-title text-base">{product.name}</h2>
       <p className="text-base">${product.price.toFixed(2)}</p>
       <p className="text-base">{product.description}</p>
-      <p className="text-sm mt-4">In Stock: {getProductStock(product._id)}</p>
+      <p className="text-sm mt-4">In Stock: {product.inStock - quantityValues[product._id]}</p>
+
     </div>
   </div>
 ))}
@@ -145,11 +111,8 @@ const ProductDisplay = () => {
         <div className="grid h-96 flex-grow card rounded-box place-items-center w-1/3"> 
         
         <CartDisplay 
-            cart={cart} 
-            setCart={setCart} 
-
-            isItemInCart={isItemInCart}
-            setIsItemInCart={setIsItemInCart}
+            addToCart={addToCart}
+            setAddToCart={setAddToCart}
 
             quantityValues={quantityValues}
             setQuantityValues={setQuantityValues}
@@ -157,7 +120,6 @@ const ProductDisplay = () => {
             checkoutSuccess={checkoutSuccess}
             setCheckoutSuccess={setCheckoutSuccess}
             />
-        
         </div>
     </div>  
 

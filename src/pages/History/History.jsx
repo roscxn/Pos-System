@@ -15,12 +15,14 @@ const History = () => {
 
     return (
         <>
-            <h1 className="text-xl mb-5 mt-5">Past Transactions</h1>
+            <div className="flex items-center justify-center">
+            <h1 className="text-xl mt-12 mb-12">Past Transactions</h1>
+            </div>
          
-
+            <div className="overflow-x-auto">
             <table className="table">
                 <thead>
-                    <tr>
+                    <tr className="hover">
                         <th>Transaction ID</th>
                         <th>Date and Time</th>
                         <th>Product</th>
@@ -66,6 +68,7 @@ const History = () => {
                     ))}
                 </tbody>
             </table>
+            </div>
         </>
     );
 };
