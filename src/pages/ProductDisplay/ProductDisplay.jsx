@@ -19,7 +19,6 @@ const ProductDisplay = () => {
               initialQuantityValues[product._id] = 0;
             });
     
-            // Set products and quantityValues state
             setProducts(data);
             setQuantityValues(initialQuantityValues);
           });
@@ -51,10 +50,7 @@ const ProductDisplay = () => {
                   } else {
                     console.log("Maximum quantity reached")
                   }
-             
-                console.log("Added to cart:", data);      
-
-            } else {
+                } else {
                 console.error("Add to cart unsuccessful:", response.status, response.statusText);
             }
         } catch (error) {
@@ -65,63 +61,62 @@ const ProductDisplay = () => {
     return (
         <>
            <div className="carousel w-full">
-        <div id="slide1" className="carousel-item relative w-full">
-            <img src="https://ssecomm.s3-ap-southeast-1.amazonaws.com/ads/CSkdbOXIzYXgKk9cYxweFlRklni6Cx.jpg" className="w-full h-48 object-cover" />
-            <div className="absolute flex justify-between transform -translate-y-1/2 left-5 right-5 top-1/2">
-        </div>
-     </div> 
-    </div>               
+              <div id="slide1" className="carousel-item relative w-full">
+                  <img src="https://ssecomm.s3-ap-southeast-1.amazonaws.com/ads/CSkdbOXIzYXgKk9cYxweFlRklni6Cx.jpg" className="w-full h-48 object-cover" />
+                  <div className="absolute flex justify-between transform -translate-y-1/2 left-5 right-5 top-1/2">
+              </div>
+          </div> 
+          </div>               
 
         <div className="flex w-full">
             <div className="grid h-auto flex-grow card rounded-box place-items-center w-1/2"> 
 
-<div className="grid grid-cols-4 gap-6 mt-6 mb-6">
+        <div className="grid grid-cols-4 gap-6 mt-6 mb-6">
 
-{products.map((product) => (
-  <div
-    key={product._id}
-    className="card card-compact bg-base-100 shadow-xl w-48 h-auto hover:bg-primary"
-    onClick={(event) => handleAdd(event, product)}
-  >
-    <div className="card-body">
-        
+        {products.map((product) => (
+          <div
+            key={product._id}
+            className="card card-compact bg-base-100 shadow-xl w-48 h-auto hover:bg-primary"
+            onClick={(event) => handleAdd(event, product)}
+          >
+            <div className="card-body">
 
-    {!checkoutSuccess && quantityValues[product._id] > 0 ? (
-        <div className="indicator">
-            <span className="indicator-item badge badge-warning w-auto h-10 text-lg">
-            x {quantityValues[product._id]}
-            </span>
+            {!checkoutSuccess && quantityValues[product._id] > 0 ? (
+                <div className="indicator">
+                    <span className="indicator-item badge badge-warning w-auto h-10 text-lg">
+                    x {quantityValues[product._id]}
+                    </span>
+                </div>
+                ) : null}
+
+              <img src={product.image} alt="Product Image" className="w-48 h-36 rounded" />
+              <h2 className="card-title text-base">{product.name}</h2>
+              <p className="text-base">${product.price.toFixed(2)}</p>
+              <p className="text-base">{product.description}</p>
+              <p className="text-sm mt-4">In Stock: {product.inStock - quantityValues[product._id]}</p>
+
+            </div>
+          </div>
+        ))}
+
+            </div>
         </div>
-        ) : null}
-
-      <img src={product.image} alt="Product Image" className="w-48 h-36 rounded" />
-      <h2 className="card-title text-base">{product.name}</h2>
-      <p className="text-base">${product.price.toFixed(2)}</p>
-      <p className="text-base">{product.description}</p>
-      <p className="text-sm mt-4">In Stock: {product.inStock - quantityValues[product._id]}</p>
-
-    </div>
-  </div>
-))}
-
-    </div>
-</div>
 
         <div className="divider divider-horizontal"></div>
-        <div className="grid h-96 flex-grow card rounded-box place-items-center w-1/3"> 
+          <div className="grid h-96 flex-grow card rounded-box place-items-center w-1/3"> 
         
-        <CartDisplay 
-            addToCart={addToCart}
-            setAddToCart={setAddToCart}
+            <CartDisplay 
+                addToCart={addToCart}
+                setAddToCart={setAddToCart}
 
-            quantityValues={quantityValues}
-            setQuantityValues={setQuantityValues}
+                quantityValues={quantityValues}
+                setQuantityValues={setQuantityValues}
 
-            checkoutSuccess={checkoutSuccess}
-            setCheckoutSuccess={setCheckoutSuccess}
-            />
-        </div>
-    </div>  
+                checkoutSuccess={checkoutSuccess}
+                setCheckoutSuccess={setCheckoutSuccess}
+                />
+            </div>
+        </div>  
 
     </>
     )

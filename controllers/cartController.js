@@ -1,79 +1,29 @@
 const Product = require('../models/Product');
 const Cart = require('../models/Cart');
 
-
-// const addToCart = async (req, res) => {
-//     try {
-//         const productToCart = await Product.findById(req.body._id)
-
-//         // Fetch products currently in the cart
-
-//         const cartData = req.session.cart;
-//         const productsInCart = await Product.find({ _id: { $in: cartData } });
-
-
-//         // Check if the product is already in the cart
-//         const existingCartItem = productsInCart.find(
-//             (item) => item._id.toString() === productToCart._id.toString()
-//         );
-
-
-//         console.log("add to cart:", existingCartItem)
-
-//         if (!existingCartItem) {
-//             // If the product is not in the cart, add it with the selected quantity
-//             req.session.cart = req.session.cart || [];
-//             req.session.cart.push(productToCart._id);
-//             res.json({ message: "Product added to cart successfully." });
-
-//         } else {
-
-//         // Check if the selected quantity is valid
-//         const selectedQuantity = req.body.quantity || 1; // Default to 1 if quantity is not provided
-//             if (selectedQuantity <= 0 || selectedQuantity >= productToCart.inStock) {
-//             return res.status(400).json({ error: 'Invalid quantity' });
-//         }   else {
-//             res.json({ message: "Product quantity update" });
-//         }
-//         }
-//     } catch (error) {
-//         console.log("Add to cart unsuccessful", error);
-//         res.status(400).json({ error: 'Add to cart unsuccessful' });
-//     }
-// };
-
-
 const addToCart = async (req, res) => {
     try {
         const productToCart = await Product.findById(req.body._id)
 
-        // Fetch products currently in the cart
         const cartData = req.session.cart || []
         const productsInCart = await Product.find({ _id: { $in: cartData } });
-
-        // Check if the product is already in the cart
 
         const isProductInCart = productsInCart.find(
             (item) => item._id.toString() === productToCart._id.toString()
         );
 
         if (!isProductInCart) {
-            // If the product is not in the cart, add it
             cartData.push(productToCart._id);
-            console.log("Product added to cart:", productToCart);
             res.json({ message: "Product added to cart successfully." });
 
         } else {
-            const selectedQuantity = req.body.quantity || 1; // Default to 1 if quantity is not provided
+            const selectedQuantity = req.body.quantity || 1; 
                 if (selectedQuantity <= 0 || selectedQuantity >= productToCart.inStock) {
                     return res.status(400).json({ error: 'Invalid quantity' });
                 } else {
                     res.json({ message: "Update cart quantity" });
                 }
         }
-        console.log("Current cart items:", cartData);
-
-        // Update the session cart with the modified cartData
         req.session.cart = cartData;
 
     } catch (error) {
@@ -84,18 +34,14 @@ const addToCart = async (req, res) => {
 
 const displayCart = async (req, res) => {
     try {
-      // Fetch the cart data from the session
       const cartData = req.session.cart || [];
   
-      // If there is no cart data in the session, clear it
       if (cartData.length === 0) {
         req.session.cart = [];
       }
   
-      // Fetch the products in the cart based on the cartData
       const productsInCart = await Product.find({ _id: { $in: cartData } });
 
-      // Send the products in the cart to the client
       res.json(productsInCart);
     } catch (error) {
       console.error("Error fetching cart data:", error);
@@ -117,21 +63,16 @@ const checkOut = async (req, res) => {
     try {
         const cartCheckOut = req.body;
 
-        // Retrieve each cart item and update product stock
         for (const cartItem of cartCheckOut.cartItems) {
             const product = await Product.findById(cartItem.product);
 
-            // Check if the requested quantity is greater than available stock
             if (cartItem.quantity > product.inStock) {
                 return res.status(400).json({
                     error: `Not enough stock available for product: ${product.name}`,
                 });
             }
 
-            // Update product stock by subtracting the purchased quantity
             product.inStock -= cartItem.quantity;
-
-            // Save the updated product information
             await product.save();
         }
 
@@ -152,28 +93,17 @@ const checkOut = async (req, res) => {
     }
 };
 
-// const deleteCart = async (req, res) => {
-//     try {
-//         req.session.cart = []; // Clear the cart by assigning an empty array
-//         res.json({ message: "All products deleted from the cart successfully." });
-//     } catch (error) {
-//         res.status(400).json({ error: 'Error deleting products from cart' });
-//     }
-// }
-
-
-
 const history = async (req, res) => {
     try {
         // Use populate to populate the 'product' field in cartItems
+        
         const transactions = await Cart.find().populate({
-            path: 'cartItems.product', // 'cartItems.product' should match the field name in your cartSchema
-            model: 'Product', // 'Product' should match the model name for your product schema
+            path: 'cartItems.product', 
+            model: 'Product', 
         });
 
         res.json(transactions);
     } catch (error) {
-        console.log('Error fetching past transactions', error);
         res.status(500).json({ error: 'Error fetching past transactions' });
     }
 }
@@ -183,6 +113,5 @@ module.exports = {
     displayCart,
     removeProduct,
     checkOut,
-    // deleteCart,
     history
 }

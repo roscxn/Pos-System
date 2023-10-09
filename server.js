@@ -15,7 +15,7 @@ app.use(express.static(path.join(__dirname, 'dist')));
 
 app.use(
   session({
-    secret: 'possystem', // Replace with your secret key
+    secret: 'possystem', 
     resave: false,
     saveUninitialized: true,
     cookie: {
@@ -28,17 +28,6 @@ app.use(
 app.use("/api/product", productRouter);
 app.use("/api/cart", cartRouter);
 
-// app.post('/', (req, res) => {
-//   if (req.session && req.session.cart) {
-//     req.session.cart = {}; // Clear the cart data
-//     console.log('Cart data cleared.');
-//   }
-
-//   res.redirect('/'); // Redirect to the homepage or a login page
-// });
-
-
-
 app.get('/api', function(req, res) {
   res.send("Hi!");
 });
@@ -46,7 +35,6 @@ app.get('/api', function(req, res) {
 app.get('/*', function(req, res) {
   res.sendFile(path.join(__dirname, 'dist', 'index.html'));
 });
-
 
 const port = process.env.PORT || 3000;
 

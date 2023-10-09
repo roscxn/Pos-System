@@ -2,13 +2,6 @@ const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
 
 const productSchema = new Schema({
-    productId: {
-        type: String,
-        required: true,
-        unique: true,
-        minlength: 3,
-        maxlength: 20,
-    },
     name: {
         type: String,
         minlength: 3,
@@ -19,11 +12,13 @@ const productSchema = new Schema({
     inStock: {
         type: Number,
         min: 0,
+        max: 1000,
         required: true,
     },
     price: {
         type: Number,
-        min: 0,
+        min: 1,
+        max: 1000,
         required: true,
     },
     image: {
@@ -36,11 +31,11 @@ const productSchema = new Schema({
     description: {
         type: String,
         minLength: 2,
-        maxLength: 10,
+        maxLength: 20,
         required: true,
     },
 }, {
-    timestamps: true // Set the timestamps option here
+    timestamps: true 
 });
 
 module.exports = mongoose.model('Product', productSchema);

@@ -21,16 +21,14 @@ const CartDisplay = ({ addToCart, setAddToCart, quantityValues, setQuantityValue
     }, [addToCart]);
 
     const handleQuantityChange = (newQuantity, productId, product) => {
-        // Ensure the new quantity is within the allowed range (0 to 10)
     
         if (newQuantity >= 0 && newQuantity <= product.inStock) {
     
-          // Update the quantityValues state for the specific product ID
           setQuantityValues({
             ...quantityValues,
             [productId]: newQuantity,
           });
-          // Check if the new quantity is 0 and remove the item from the cart
+          
             if (newQuantity === 0) {
                     setShowCart((prevCart) =>
                     prevCart.filter((cartItem) => cartItem._id !== productId) 
@@ -51,7 +49,6 @@ const CartDisplay = ({ addToCart, setAddToCart, quantityValues, setQuantityValue
               body: JSON.stringify({ _id: cart._id, quantity: quantityValues[cart._id] })  
             });
             const data = await response.json();
-            console.log(data.message);
             setAddToCart(data);
 
             setQuantityValues({
@@ -103,24 +100,17 @@ const CartDisplay = ({ addToCart, setAddToCart, quantityValues, setQuantityValue
                 ...prevQuantityValues,
                 ...resetQuantities,
             }));
-
                   
                 setShowCart([])
                 setCheckoutSuccess(true)
 
-                console.log("Check out successful");
-
-                console.log("Product quantities after checkout:", quantityValues);
-
-                
               } else {
                 console.error("Unsuccessful:", response.status, response.statusText);
             }
         } catch (error) {
             console.error("An expected error occurred:", error);
         }
-      }
-          
+      }         
 
     return (
         <>
