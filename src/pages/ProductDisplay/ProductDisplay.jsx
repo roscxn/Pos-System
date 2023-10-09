@@ -12,7 +12,6 @@ const ProductDisplay = () => {
     const [checkoutSuccess, setCheckoutSuccess] = useState(false); 
 
 
-
 // Fetch all products from DB 
 
     useEffect(() => {
@@ -31,6 +30,7 @@ const ProductDisplay = () => {
         });
     
         // Fetch cart items and check if products are in the cart
+
         fetch("/api/cart/")
         .then((response) => response.json())
         .then((data) => {
@@ -38,7 +38,6 @@ const ProductDisplay = () => {
             products.some((product) => product._id === item._id)
             );
             setIsItemInCart(isItemInCart);
-            
         });
     }, []);
    
@@ -71,13 +70,14 @@ const ProductDisplay = () => {
                 setIsItemInCart(true);
 
                 setQuantityValues({ ...quantityValues, [product._id]: 1 }); // Update the quantity for the added product
-                setCheckoutSuccess(false)
+                
                 console.log("Added to cart:", data);
             } else if (response.ok && method === "PUT") {
                 const data = await response.json();
                 setCart(data);
+                setIsItemInCart(true);
                 setQuantityValues({ ...quantityValues, [product._id]: quantityValues[product._id] + 1 }); // Increment the quantity for the existing product
-                setCheckoutSuccess(false)
+                
                 console.log("Added to cart:", data);
             } else {
                 console.error("Unsuccessful:", response.status, response.statusText);
@@ -106,7 +106,7 @@ const ProductDisplay = () => {
     </div>               
 
         <div className="flex w-full">
-            <div className="grid h-auto flex-grow card rounded-box place-items-center w-2/3"> 
+            <div className="grid h-auto flex-grow card rounded-box place-items-center w-1/2"> 
 
 <div className="grid grid-cols-4 gap-6 mt-6 mb-6">
 
@@ -117,11 +117,8 @@ const ProductDisplay = () => {
     onClick={(event) => handleAdd(event, product)}
   >
     <div className="card-body">
-
-
-      {/* {isItemInCart && quantityValues[product._id] > 0 ? ( // Only display the indicator if quantity is greater than 0 */}
         
-      {isItemInCart ? ( // Only display the indicator if quantity is greater than 0
+      { !checkoutSuccess && isItemInCart && quantityValues[product._id] > 0 ? ( 
 
         <div className="indicator">
           <span className="indicator-item badge badge-warning w-auto h-10 text-lg">
