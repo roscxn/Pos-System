@@ -18,7 +18,7 @@ app.use(
     secret: process.env.SECRET, // Replace with a secure secret key
     resave: false,
     saveUninitialized: true,
-    cookie: { secure: true }, // Set to true in production with HTTPS
+    // cookie: { secure: true }, // Set to true in production with HTTPS
   })
 );
 
