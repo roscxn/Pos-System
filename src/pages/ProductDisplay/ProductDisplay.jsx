@@ -5,7 +5,7 @@ const ProductDisplay = () => {
     const [products, setProducts] = useState([]);
     const [cart, setCart] = useState([]);
 
-    const [isItemInCart, setIsItemInCart] = useState(false);
+    const [isItemInCart, setIsItemInCart] = useState({});
 
     const [quantityValues, setQuantityValues] = useState({});
 
@@ -67,7 +67,7 @@ const ProductDisplay = () => {
             if (response.ok && method === "POST") {
                 const data = await response.json();
                 setCart(data);
-                setIsItemInCart(true);
+                setIsItemInCart({ ...isItemInCart, [product._id]: true });
 
                 setQuantityValues({ ...quantityValues, [product._id]: 1 }); // Update the quantity for the added product
                 
@@ -75,7 +75,7 @@ const ProductDisplay = () => {
             } else if (response.ok && method === "PUT") {
                 const data = await response.json();
                 setCart(data);
-                setIsItemInCart(true);
+                setIsItemInCart({ ...isItemInCart, [product._id]: true });
                 setQuantityValues({ ...quantityValues, [product._id]: quantityValues[product._id] + 1 }); // Increment the quantity for the existing product
                 
                 console.log("Added to cart:", data);
@@ -118,7 +118,7 @@ const ProductDisplay = () => {
   >
     <div className="card-body">
         
-      { !checkoutSuccess && isItemInCart && quantityValues[product._id] > 0 ? ( 
+      { !checkoutSuccess && isItemInCart[product._id] && quantityValues[product._id] > 0 ? ( 
 
         <div className="indicator">
           <span className="indicator-item badge badge-warning w-auto h-10 text-lg">

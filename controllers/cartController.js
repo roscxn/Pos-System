@@ -100,6 +100,7 @@ const checkOut = async (req, res) => {
         req.session.cart = [];
 
         res.status(201).json(savedCart);
+
     } catch (error) {
         console.error(error);
         res.status(500).json({ error: 'Error checking out cart' });

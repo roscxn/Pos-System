@@ -97,14 +97,18 @@ const CartDisplay = ({ cart, setCart, isItemInCart, setIsItemInCart, quantityVal
             setCart(data);
             setCheckoutSuccess(true);
 
-            setQuantityValues({
-              ...quantityValues,
-              [cart._id]: 0,
-            });
+            setQuantityValues({});
+            setIsItemInCart({})
             
-            setIsItemInCart({ ...isItemInCart, [cart._id]: false });
 
-            window.location.reload();
+            // setQuantityValues({
+            //   ...quantityValues,
+            //   [cart._id]: 0,
+            // });
+            
+            // setIsItemInCart({ ...isItemInCart, [cart._id]: false });
+
+            // window.location.reload();
 
             
           } else {
