@@ -94,7 +94,9 @@ const CartDisplay = ({ cart, setCart, isItemInCart, setIsItemInCart, quantityVal
           )
           if (response.ok) {
             const data = await response.json();
-            setCart(data);
+            // setCart(data);
+
+            setCart([])
             setCheckoutSuccess(true);
 
             setQuantityValues({});
@@ -224,45 +226,3 @@ const CartDisplay = ({ cart, setCart, isItemInCart, setIsItemInCart, quantityVal
 
 export default CartDisplay;
 
-
-// {filteredCart.map((product) => (
-//   <li key={product._id}>
-//       <p>{product.name}</p>
-
-//       <p>Total item price: ${(product.price * quantityValues[product._id]).toFixed(2)}</p>
-
-//       Qty:  <input
-//           type="number"
-//           min="0"
-//           max={product.inStock} 
-//           value={quantityValues[product._id]}
-//           onChange={(e) => handleQuantityChange(parseInt(e.target.value), product._id, product)}
-//           className="input input-bordered input-primary w-20 h-9"
-//       />
-//           <p>In Stock: {product.inStock - quantityValues[product._id]}</p> 
-
-
-//    <button
-//       className="btn btn-primary"
-//       onClick={() => document.getElementById(`my_modal_${product._id}`).showModal()}
-//       >
-//       Remove
-//       </button>
-//       <dialog id={`my_modal_${product._id}`} className="modal">
-//       <div className="modal-box">
-//           <h3 className="font-bold text-lg">Remove "{product.name}" from cart?</h3>
-//           <div className="modal-action">
-//           <form method="dialog">
-//               <button className="btn">Cancel</button>
-//               <button
-//               className="btn btn-error"
-//               onClick={(event) => handleRemove(event, product)}
-//               >
-//               Remove
-//               </button>
-//           </form>
-//           </div>
-//       </div>
-//       </dialog>
-//       </li>
-//       ))}

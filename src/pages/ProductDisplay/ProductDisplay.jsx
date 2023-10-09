@@ -66,6 +66,7 @@ const ProductDisplay = () => {
             });
             if (response.ok && method === "POST") {
                 const data = await response.json();
+                setCheckoutSuccess(false)
                 setCart(data);
                 setIsItemInCart({ ...isItemInCart, [product._id]: true });
 
@@ -74,6 +75,7 @@ const ProductDisplay = () => {
                 console.log("Added to cart:", data);
             } else if (response.ok && method === "PUT") {
                 const data = await response.json();
+                setCheckoutSuccess(false)
                 setCart(data);
                 setIsItemInCart({ ...isItemInCart, [product._id]: true });
                 setQuantityValues({ ...quantityValues, [product._id]: quantityValues[product._id] + 1 }); // Increment the quantity for the existing product

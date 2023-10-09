@@ -2,45 +2,86 @@ const Product = require('../models/Product');
 const Cart = require('../models/Cart');
 
 
+// const addToCart = async (req, res) => {
+//     try {
+//         const productToCart = await Product.findById(req.body._id)
+
+//         // Fetch products currently in the cart
+
+//         const cartData = req.session.cart;
+//         const productsInCart = await Product.find({ _id: { $in: cartData } });
+
+
+//         // Check if the product is already in the cart
+//         const existingCartItem = productsInCart.find(
+//             (item) => item._id.toString() === productToCart._id.toString()
+//         );
+
+
+//         console.log("add to cart:", existingCartItem)
+
+//         if (!existingCartItem) {
+//             // If the product is not in the cart, add it with the selected quantity
+//             req.session.cart = req.session.cart || [];
+//             req.session.cart.push(productToCart._id);
+//             res.json({ message: "Product added to cart successfully." });
+
+//         } else {
+
+//         // Check if the selected quantity is valid
+//         const selectedQuantity = req.body.quantity || 1; // Default to 1 if quantity is not provided
+//             if (selectedQuantity <= 0 || selectedQuantity >= productToCart.inStock) {
+//             return res.status(400).json({ error: 'Invalid quantity' });
+//         }   else {
+//             res.json({ message: "Product quantity update" });
+//         }
+//         }
+//     } catch (error) {
+//         console.log("Add to cart unsuccessful", error);
+//         res.status(400).json({ error: 'Add to cart unsuccessful' });
+//     }
+// };
+
+
 const addToCart = async (req, res) => {
     try {
         const productToCart = await Product.findById(req.body._id)
 
         // Fetch products currently in the cart
-
-        const cartData = req.session.cart;
+        const cartData = req.session.cart || []
         const productsInCart = await Product.find({ _id: { $in: cartData } });
 
-
         // Check if the product is already in the cart
-        const existingCartItem = productsInCart.find(
-            (item) => item._id.toString() === productToCart._id.toString()
-        );
+        const isProductInCart = productsInCart.some(cartProduct => cartProduct._id.equals(productToCart._id));
 
-
-        console.log("add to cart:", existingCartItem)
-
-        if (!existingCartItem) {
-            // If the product is not in the cart, add it with the selected quantity
-            req.session.cart = req.session.cart || [];
-            req.session.cart.push(productToCart._id);
+        if (!isProductInCart) {
+            // If the product is not in the cart, add it
+            cartData.push(productToCart._id);
+            console.log("Product added to cart:", productToCart);
             res.json({ message: "Product added to cart successfully." });
 
         } else {
+            const selectedQuantity = req.body.quantity || 1; // Default to 1 if quantity is not provided
+                if (selectedQuantity <= 0 || selectedQuantity >= productToCart.inStock) {
+                    return res.status(400).json({ error: 'Invalid quantity' });
+                } else {
+                    res.json({ message: "Update cart quantity" });
+                }
+        }
 
-        // Check if the selected quantity is valid
-        const selectedQuantity = req.body.quantity || 1; // Default to 1 if quantity is not provided
-            if (selectedQuantity <= 0 || selectedQuantity >= productToCart.inStock) {
-            return res.status(400).json({ error: 'Invalid quantity' });
-        }   else {
-            res.json({ message: "Product quantity update" });
-        }
-        }
+        console.log("Current cart items:", cartData);
+
+        // Update the session cart with the modified cartData
+        req.session.cart = cartData;
+
     } catch (error) {
-        console.log("Add to cart unsuccessful", error);
+        console.error("Add to cart unsuccessful", error);
         res.status(400).json({ error: 'Add to cart unsuccessful' });
     }
-};
+}
+
+
+
 
 const displayCart = async (req, res) => {
     try {
