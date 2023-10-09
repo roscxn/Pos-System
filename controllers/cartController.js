@@ -14,6 +14,7 @@ const addToCart = async (req, res) => {
 
         if (!isProductInCart) {
             cartData.push(productToCart._id);
+
             res.json({ message: "Product added to cart successfully." });
 
         } else {
@@ -43,6 +44,7 @@ const displayCart = async (req, res) => {
       const productsInCart = await Product.find({ _id: { $in: cartData } });
 
       res.json(productsInCart);
+
     } catch (error) {
       console.error("Error fetching cart data:", error);
       res.status(400).json({ error: 'Error fetching cart data' });
@@ -70,10 +72,14 @@ const checkOut = async (req, res) => {
                 return res.status(400).json({
                     error: `Not enough stock available for product: ${product.name}`,
                 });
-            }
 
-            product.inStock -= cartItem.quantity;
-            await product.save();
+            } else if (cartCheckOut.totalCartPrice <= 0 ) {
+                res.status(400).json({ error: 'Invalid Cart Quantity' });     
+
+            } else {
+                product.inStock -= cartItem.quantity;
+                await product.save();
+            }
         }
 
         const newCart = new Cart({
@@ -96,7 +102,7 @@ const checkOut = async (req, res) => {
 const history = async (req, res) => {
     try {
         // Use populate to populate the 'product' field in cartItems
-        
+
         const transactions = await Cart.find().populate({
             path: 'cartItems.product', 
             model: 'Product', 

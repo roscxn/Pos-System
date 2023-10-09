@@ -7,6 +7,7 @@ const ProductDisplay = () => {
     const [addToCart, setAddToCart] = useState([]);
     const [quantityValues, setQuantityValues] = useState({})
     const [checkoutSuccess, setCheckoutSuccess] = useState(false)
+    const [errorMessage, setErrorMessage] = useState("");
 
 
     useEffect(() => {
@@ -37,8 +38,8 @@ const ProductDisplay = () => {
             if (response.ok) {
                 const data = await response.json();
                 setAddToCart(data);
-
                 setCheckoutSuccess(false);
+                setErrorMessage("");
 
                 const inStockLeft = product.inStock - quantityValues[product._id];
 
@@ -104,7 +105,7 @@ const ProductDisplay = () => {
 
         <div className="divider divider-horizontal"></div>
           <div className="grid h-96 flex-grow card rounded-box place-items-center w-1/3"> 
-        
+
             <CartDisplay 
                 addToCart={addToCart}
                 setAddToCart={setAddToCart}
@@ -114,6 +115,9 @@ const ProductDisplay = () => {
 
                 checkoutSuccess={checkoutSuccess}
                 setCheckoutSuccess={setCheckoutSuccess}
+
+                errorMessage={errorMessage}
+                setErrorMessage={setErrorMessage}
                 />
             </div>
         </div>  

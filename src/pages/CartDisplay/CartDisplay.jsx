@@ -1,6 +1,10 @@
 import React, { useState, useEffect } from "react";
 
-const CartDisplay = ({ addToCart, setAddToCart, quantityValues, setQuantityValues, checkoutSuccess, setCheckoutSuccess }) => {
+const CartDisplay = ({ 
+  addToCart, setAddToCart, 
+  quantityValues, setQuantityValues, 
+  checkoutSuccess, setCheckoutSuccess, 
+  errorMessage, setErrorMessage }) => {
 
     const [showCart, setShowCart] = useState([]);
 
@@ -21,22 +25,23 @@ const CartDisplay = ({ addToCart, setAddToCart, quantityValues, setQuantityValue
     }, [addToCart]);
 
     const handleQuantityChange = (newQuantity, productId, product) => {
+      if (newQuantity >= 0 && newQuantity <= product.inStock) {
+        setQuantityValues({
+          ...quantityValues,
+          [productId]: newQuantity,
+        });
     
-        if (newQuantity >= 0 && newQuantity <= product.inStock) {
-    
-          setQuantityValues({
-            ...quantityValues,
-            [productId]: newQuantity,
-          });
-          
-            if (newQuantity === 0) {
-                    setShowCart((prevCart) =>
-                    prevCart.filter((cartItem) => cartItem._id !== productId) 
-                );
-            }
+        if (newQuantity === 0) {
+          setShowCart((prevCart) =>
+            prevCart.filter((cartItem) => cartItem._id !== productId)
+          );
         }
+        setErrorMessage("");
+      } else {
+        setErrorMessage("Invalid quantity");
+      }
     };
-
+    
     const handleRemove = async (event, cart) => {
         event.preventDefault();
         try {
@@ -55,6 +60,8 @@ const CartDisplay = ({ addToCart, setAddToCart, quantityValues, setQuantityValue
               ...quantityValues,
               [cart._id]: 0,
             });
+
+            setErrorMessage("");
             
             if (!response.ok) {
             throw new Error(data.message);
@@ -89,29 +96,33 @@ const CartDisplay = ({ addToCart, setAddToCart, quantityValues, setQuantityValue
               )
               if (response.ok) {  
 
-            // Create an object to reset quantities for all cart items to 0
-            const resetQuantities = {};
-            cartItems.forEach((cartItem) => {
-                resetQuantities[cartItem.product] = 0;
-            });
+                // Create an object to reset quantities for all cart items to 0
+                const resetQuantities = {};
+                cartItems.forEach((cartItem) => {
+                    resetQuantities[cartItem.product] = 0;
+                });
 
-            // Update quantityValues state with the resetQuantities object
-            setQuantityValues((prevQuantityValues) => ({
-                ...prevQuantityValues,
-                ...resetQuantities,
-            }));
+                // Update quantityValues state with the resetQuantities object
+                setQuantityValues((prevQuantityValues) => ({
+                    ...prevQuantityValues,
+                    ...resetQuantities,
+                }));
                   
                 setShowCart([])
                 setCheckoutSuccess(true)
+                setErrorMessage("");
 
               } else {
-                console.error("Unsuccessful:", response.status, response.statusText);
+                const errorData = await response.json();
+                const errorMessage = errorData.error;
+                setErrorMessage(errorMessage);
             }
         } catch (error) {
             console.error("An expected error occurred:", error);
         }
-      }         
-
+      }
+      
+      
     return (
         <>
        
@@ -134,9 +145,8 @@ const CartDisplay = ({ addToCart, setAddToCart, quantityValues, setQuantityValue
             {showCart.map((product) => (
               <tr key={product._id}>
                 <td>{product.name}</td>
-                
-
                 <td>${(product.price * quantityValues[product._id]).toFixed(2)}</td>
+                
                 <td>
                   <input
                     type="number"
@@ -211,6 +221,14 @@ const CartDisplay = ({ addToCart, setAddToCart, quantityValues, setQuantityValue
 
             )
         }
+
+      
+      {errorMessage && (
+        <div className="alert alert-error">
+          {errorMessage}
+        </div>
+      )}
+
         </>
     
     )};
