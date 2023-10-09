@@ -67,6 +67,66 @@ const CartDisplay2 = ({ addToCart, setAddToCart, quantityValues, setQuantityValu
               }
           };
 
+        //   const handleCheckOut = async (event, showCart, cart) => {
+        //     event.preventDefault();
+          
+        //     const cartItems = filteredCart.map((cart) => ({
+        //       product: cart._id,
+        //       quantity: quantityValues[cart._id],
+        //       itemPrice: cart.price * quantityValues[cart._id],
+        //     }));
+          
+        //     try {
+        //       // First, create an order or perform the checkout
+        //       const checkoutResponse = await fetch("/api/cart/checkout", {
+        //         method: "POST",
+        //         headers: {
+        //           "Content-Type": "application/json",
+        //         },
+        //         body: JSON.stringify({
+        //           cartItems: cartItems,
+        //           totalCartPrice: totalCartPrice,
+        //         }),
+        //       });
+          
+        //       if (checkoutResponse.ok) {
+        //         // If the checkout is successful, proceed to delete items from the cart
+        //         const deleteCartResponse = await fetch("/api/cart/deleteCart", {
+        //           method: "DELETE",
+        //           headers: {
+        //             "Content-Type": "application/json",
+        //           },
+        //           body: JSON.stringify({ cartItems: cartItems }),
+        //         });
+          
+        //         if (!deleteCartResponse.ok) {
+        //           console.error("Error deleting items from the cart:", deleteCartResponse.status, deleteCartResponse.statusText);
+        //           return;
+        //         }
+          
+        //         // If both requests are successful, clear the cart and set the checkout success flag
+        //         setQuantityValues({
+        //             ...quantityValues,
+        //             [cart._id]: 0,
+        //           });
+
+        //           setShowCart([]);
+
+        //         setCheckoutSuccess(true);
+          
+        //         console.log("Check out successful");
+        //       } else {
+        //         console.error("Error creating order:", checkoutResponse.status, checkoutResponse.statusText);
+        //       }
+        //     } catch (error) {
+        //       console.error("An unexpected error occurred:", error);
+        //     }
+        //   };
+          
+          
+
+
+
           const handleCheckOut = async (event, cart) => {
             event.preventDefault();
     
@@ -90,16 +150,28 @@ const CartDisplay2 = ({ addToCart, setAddToCart, quantityValues, setQuantityValu
                 
                 }
               )
-              if (response.ok) {
-                setAddToCart([])
+              if (response.ok) {  
+
+            // Create an object to reset quantities for all cart items to 0
+            const resetQuantities = {};
+            cartItems.forEach((cartItem) => {
+                resetQuantities[cartItem.product] = 0;
+            });
+
+            // Update quantityValues state with the resetQuantities object
+            setQuantityValues((prevQuantityValues) => ({
+                ...prevQuantityValues,
+                ...resetQuantities,
+            }));
+
+                  
+                setShowCart([])
                 setCheckoutSuccess(true)
-                
-                setQuantityValues({
-                  ...quantityValues,
-                  [cart._id]: 0,
-                });  
 
                 console.log("Check out successful");
+
+                console.log("Product quantities after checkout:", quantityValues);
+
                 
               } else {
                 console.error("Unsuccessful:", response.status, response.statusText);

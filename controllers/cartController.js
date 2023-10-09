@@ -52,8 +52,6 @@ const addToCart = async (req, res) => {
         const productsInCart = await Product.find({ _id: { $in: cartData } });
 
         // Check if the product is already in the cart
-        // const isProductInCart = productsInCart.some(cartProduct => cartProduct._id.equals(productToCart._id));
-
 
         const isProductInCart = productsInCart.find(
             (item) => item._id.toString() === productToCart._id.toString()
@@ -154,6 +152,16 @@ const checkOut = async (req, res) => {
     }
 };
 
+// const deleteCart = async (req, res) => {
+//     try {
+//         req.session.cart = []; // Clear the cart by assigning an empty array
+//         res.json({ message: "All products deleted from the cart successfully." });
+//     } catch (error) {
+//         res.status(400).json({ error: 'Error deleting products from cart' });
+//     }
+// }
+
+
 
 const history = async (req, res) => {
     try {
@@ -175,5 +183,6 @@ module.exports = {
     displayCart,
     removeProduct,
     checkOut,
+    // deleteCart,
     history
 }

@@ -52,7 +52,29 @@ const ProductDisplay2 = () => {
                     console.log("Maximum quantity reached")
                   }
              
-                console.log("Added to cart:", data);                
+                console.log("Added to cart:", data);      
+                
+
+    //             if ( quantityValues[product._id] > 0 ) {
+    //               // Product is already in the cart, increase its quantity
+    //               const inStockLeft = product.inStock - quantityValues[product._id];
+    //               if (inStockLeft > 0) {
+    //                 setQuantityValues((prevQuantityValues) => ({
+    //                   ...prevQuantityValues,
+    //                   [product._id]: prevQuantityValues[product._id] + 1,
+    //                 }));
+    //               } else {
+    //                 console.log("Maximum quantity reached");
+    //               }
+    //             } else {
+    //               // Product not in cart, initialize quantity to 1
+    //               setQuantityValues((prevQuantityValues) => ({
+    //                 ...prevQuantityValues,
+    //                 [product._id]: 1,
+    //               }));
+    //             }
+          
+    //             console.log("Added to cart:", data);
 
             } else {
                 console.error("Add to cart unsuccessful:", response.status, response.statusText);
@@ -86,20 +108,20 @@ const ProductDisplay2 = () => {
     <div className="card-body">
         
 
-    { quantityValues[product._id] <= 0 ? ( null 
-        ) : (
+    {!checkoutSuccess && quantityValues[product._id] > 0 ? (
         <div className="indicator">
-          <span className="indicator-item badge badge-warning w-auto h-10 text-lg">
+            <span className="indicator-item badge badge-warning w-auto h-10 text-lg">
             x {quantityValues[product._id]}
-          </span>
+            </span>
         </div>
-        )}
+        ) : null}
 
       <img src={product.image} alt="Product Image" className="w-48 h-36 rounded" />
       <h2 className="card-title text-base">{product.name}</h2>
       <p className="text-base">${product.price.toFixed(2)}</p>
       <p className="text-base">{product.description}</p>
       <p className="text-sm mt-4">In Stock: {product.inStock - quantityValues[product._id]}</p>
+
     </div>
   </div>
 ))}
@@ -120,7 +142,6 @@ const ProductDisplay2 = () => {
             checkoutSuccess={checkoutSuccess}
             setCheckoutSuccess={setCheckoutSuccess}
             />
-        
         </div>
     </div>  
 
