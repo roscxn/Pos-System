@@ -198,14 +198,14 @@ const CartDisplay = ({
 
                 <td className="flex items-center">
                   <button
-                    className="btn btn-outline text-xs w-6 h-6 mr-2"
+                    className="btn btn-outline btn-xs w-6 h-6 mr-3 text-lg"
                     onClick={() => handleReduceQuantity(product, quantityValues[product._id])}
                   >
-                    __
+                    -
                   </button>
                   {quantityValues[product._id]}
                   <button
-                    className="btn btn-outline text-xs w-6 h-6 ml-2"
+                    className="btn btn-outline btn-xs w-6 h-6 ml-3 text-md"
                     onClick={() => handleAddClick(product, quantityValues[product._id])}
                   >
                     +
@@ -216,7 +216,7 @@ const CartDisplay = ({
 
                 <td>
                   <button
-                    className="btn btn-outline text-xs w-12 h-auto"
+                    className="btn btn-outline btn-xs w-12 h-auto"
                     onClick={() =>
                       document.getElementById(`my_modal_${product._id}`).showModal()
                     }
