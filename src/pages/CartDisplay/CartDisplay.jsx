@@ -4,7 +4,8 @@ const CartDisplay = ({
   addToCart, setAddToCart, 
   quantityValues, setQuantityValues, 
   checkoutSuccess, setCheckoutSuccess, 
-  errorMessage, setErrorMessage }) => {
+  errorMessage, setErrorMessage, 
+  handleAdd }) => {
 
     const [showCart, setShowCart] = useState([]);
 
@@ -25,15 +26,73 @@ const CartDisplay = ({
     }, [addToCart]);
 
 
-    const handleQuantityChange = (newQuantity, productId, product) => {
-      if (newQuantity > 0 && newQuantity <= product.inStock) {
-        setQuantityValues({
-          ...quantityValues,
-          [productId]: newQuantity,
+    const handleAddClick = async (product) => {
+      try {
+        const response = await fetch("/api/cart/addToCart", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ _id: product._id, quantity: quantityValues }),
         });
-        setErrorMessage("");
-      } else {
-        setErrorMessage("Quantity must be above 0");
+        if (response.ok) {
+          const data = await response.json();
+          setAddToCart(data);
+          setCheckoutSuccess(false);
+          setErrorMessage("");
+  
+          const inStockLeft = product.inStock - quantityValues[product._id];
+  
+          if (inStockLeft > 0) {
+            setQuantityValues((prevQuantityValues) => ({
+              ...prevQuantityValues,
+              [product._id]: (prevQuantityValues[product._id] || 0) + 1,
+            }));
+          }
+        } else {
+          console.error(
+            "Add to cart unsuccessful:",
+            response.status,
+            response.statusText
+          );
+        }
+      } catch (error) {
+        console.error("An unexpected error occurred:", error);
+      }
+    };
+
+    const handleReduceQuantity = async (product) => {
+      try {
+        const response = await fetch("/api/cart/reduceQuantity", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ _id: product._id, quantity: quantityValues }),
+        });
+        if (response.ok) {
+          const data = await response.json();
+          setAddToCart(data);
+          setCheckoutSuccess(false);
+          setErrorMessage("");
+  
+          const inStockLeft = product.inStock - quantityValues[product._id];
+  
+          if (inStockLeft > 0) {
+            setQuantityValues((prevQuantityValues) => ({
+              ...prevQuantityValues,
+              [product._id]: (prevQuantityValues[product._id] || 0) - 1,
+            }));
+          }
+        } else {
+          console.error(
+            "Add to cart unsuccessful:",
+            response.status,
+            response.statusText
+          );
+        }
+      } catch (error) {
+        console.error("An unexpected error occurred:", error);
       }
     };
     
@@ -76,8 +135,6 @@ const CartDisplay = ({
               itemPrice: cart.product.price * cart.quantity,
             }));
             
-            console.log("handlecheckout console:", cartItems)
-
             try {
               const response = await fetch("/api/cart/checkout",
               {
@@ -127,7 +184,7 @@ const CartDisplay = ({
             <tr className="hover">
               <th>Name</th>
               <th>Price</th>
-              <th>Quantity</th>
+              <th>Quantity</th>  
               <th>In Stock</th>
               <th>Remove</th>
             </tr>
@@ -138,25 +195,25 @@ const CartDisplay = ({
               <tr key={product._id}>
                 <td>{product.name}</td>
                 <td>${(product.price * quantityValues[product._id]).toFixed(2)}</td>
-                
-                <td>
-                  <input
-                    type="number"
-                    min="1"
-                    max={product.inStock}
-                    value={quantityValues[product._id]}
-                    onChange={(e) =>
-                      handleQuantityChange(
-                        parseInt(e.target.value),
-                        product._id,
-                        product
-                      )
-                    }
-                    className="input input-bordered input-primary w-20 h-9"
-                  />
+
+                <td className="flex items-center">
+                  <button
+                    className="btn btn-outline text-xs w-6 h-6 mr-2"
+                    onClick={() => handleReduceQuantity(product, quantityValues[product._id])}
+                  >
+                    __
+                  </button>
+                  {quantityValues[product._id]}
+                  <button
+                    className="btn btn-outline text-xs w-6 h-6 ml-2"
+                    onClick={() => handleAddClick(product, quantityValues[product._id])}
+                  >
+                    +
+                  </button>
                 </td>
 
                 <td>{product.inStock - quantityValues[product._id]}</td>
+
                 <td>
                   <button
                     className="btn btn-outline text-xs w-12 h-auto"
@@ -220,10 +277,13 @@ const CartDisplay = ({
 
       
       {errorMessage && (
-        <div className="alert alert-error">
-          {errorMessage}
+        <div className="fixed bottom-4 right-4 flex justify-end">
+          <div className="alert alert-error w-64">
+            {errorMessage}
+          </div>
         </div>
       )}
+
 
         </>
     

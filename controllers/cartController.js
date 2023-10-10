@@ -1,6 +1,32 @@
 const Product = require('../models/Product');
 const Cart = require('../models/Cart');
 
+
+const displayCart = async (req, res) => {
+  try {
+      const cartData = req.session.cart || {};
+      const productIds = Object.keys(cartData);
+
+      if (productIds.length === 0) {
+          req.session.cart = {};
+      }
+
+      const productsInCart = await Product.find({ _id: { $in: productIds } });
+
+      const cartItems = productsInCart.map((product) => ({
+          product,
+          quantity: cartData[product._id],
+      }));
+
+      res.json(cartItems);
+
+  } catch (error) {
+      console.error("Error fetching cart data:", error);
+      res.status(400).json({ error: 'Error fetching cart data' });
+  }
+};
+
+
 const addToCart = async (req, res) => {
     try {
         const productToCart = await Product.findById(req.body._id);
@@ -10,6 +36,10 @@ const addToCart = async (req, res) => {
         
         if (isNaN(selectedQuantity) || selectedQuantity <= 0 || selectedQuantity >= productToCart.inStock) {
             return res.status(400).json({ error: 'Invalid quantity' });
+        }
+
+        if (cartData[productToCart._id] && cartData[productToCart._id] + selectedQuantity > productToCart.inStock) {
+          return res.status(400).json({ error: 'Exceeds available stock' });
         }
 
         if (!cartData[productToCart._id]) {
@@ -29,30 +59,32 @@ const addToCart = async (req, res) => {
 };
 
 
+const reduceQuantity = async (req, res) => {
+  try {
+    const productToCart = await Product.findById(req.body._id);
 
-const displayCart = async (req, res) => {
-    try {
-        const cartData = req.session.cart || {};
-        const productIds = Object.keys(cartData);
+    const cartData = req.session.cart || {};
+    let selectedQuantity = parseInt(req.body.quantity) || 1;
 
-        if (productIds.length === 0) {
-            req.session.cart = {};
-        }
-
-        const productsInCart = await Product.find({ _id: { $in: productIds } });
-
-        const cartItems = productsInCart.map((product) => ({
-            product,
-            quantity: cartData[product._id],
-        }));
-
-        res.json(cartItems);
-
-    } catch (error) {
-        console.error("Error fetching cart data:", error);
-        res.status(400).json({ error: 'Error fetching cart data' });
+    if (isNaN(selectedQuantity) || selectedQuantity <= 0 || selectedQuantity > cartData[productToCart._id]) {
+      return res.status(400).json({ error: 'Invalid quantity' });
     }
+
+    if (cartData[productToCart._id]) {
+      cartData[productToCart._id] -= selectedQuantity;
+
+      if (cartData[productToCart._id] <= 0) {
+        delete cartData[productToCart._id];
+      }
+    }
+
+    res.json({ message: "Quantity reduced successfully." });
+  } catch (error) {
+    console.error("Reduce quantity unsuccessful", error);
+    res.status(400).json({ error: 'Reduce quantity unsuccessful' });
+  }
 };
+
 
 const removeProduct = async (req, res) => {
   try {
@@ -71,6 +103,8 @@ const removeProduct = async (req, res) => {
       res.status(400).json({ error: 'Error deleting product from cart' });
   }
 }
+
+
 
 const checkOut = async (req, res) => {
     try {
@@ -110,6 +144,8 @@ const checkOut = async (req, res) => {
     }
 };
 
+
+
 const history = async (req, res) => {
     try {
         const transactions = await Cart.find().populate({
@@ -123,10 +159,13 @@ const history = async (req, res) => {
     }
 }
 
+
 module.exports = {
-    addToCart,
     displayCart,
+    addToCart,
+    reduceQuantity,
     removeProduct,
     checkOut,
     history,
+    
 }

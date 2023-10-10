@@ -152,7 +152,7 @@ const AddProduct = () => {
         <button className="btn btn-wide btn-primary mt-6" type="submit">Submit</button>
       </form>
       <div className="alert m-12">
-        <span>{submitMessage && <p>{submitMessage}</p>}</span>
+        <span className="text-xl">{submitMessage && <p>{submitMessage}</p>}</span>
       </div>
       
     </div>

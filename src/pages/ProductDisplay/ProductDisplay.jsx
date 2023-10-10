@@ -21,6 +21,11 @@ const ProductDisplay = () => {
     
         const handleAdd = async (event, product) => {
         event.preventDefault();
+
+        if (product.inStock === 0) {
+          setErrorMessage("Product is out of stock");
+          return;
+        }
         try {
             const response = await fetch('/api/cart/addToCart', {
                 method: 'POST',
@@ -115,6 +120,8 @@ const ProductDisplay = () => {
 
                 errorMessage={errorMessage}
                 setErrorMessage={setErrorMessage}
+
+                handleAdd={handleAdd}
                 />
             </div>
         </div>  
