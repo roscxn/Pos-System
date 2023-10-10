@@ -3,62 +3,73 @@ const Cart = require('../models/Cart');
 
 const addToCart = async (req, res) => {
     try {
-        const productToCart = await Product.findById(req.body._id)
+        const productToCart = await Product.findById(req.body._id);
 
-        const cartData = req.session.cart || []
-        const productsInCart = await Product.find({ _id: { $in: cartData } });
-
-        const isProductInCart = productsInCart.find(
-            (item) => item._id.toString() === productToCart._id.toString()
-        );
-
-        if (!isProductInCart) {
-            cartData.push(productToCart._id);
-
-            res.json({ message: "Product added to cart successfully." });
-
-        } else {
-            const selectedQuantity = req.body.quantity || 1; 
-                if (selectedQuantity <= 0 || selectedQuantity >= productToCart.inStock) {
-                    return res.status(400).json({ error: 'Invalid quantity' });
-                } else {
-                    res.json({ message: "Update cart quantity" });
-                }
+        const cartData = req.session.cart || {}; 
+        let selectedQuantity = parseInt(req.body.quantity) || 1; 
+        
+        if (isNaN(selectedQuantity) || selectedQuantity <= 0 || selectedQuantity >= productToCart.inStock) {
+            return res.status(400).json({ error: 'Invalid quantity' });
         }
+
+        if (!cartData[productToCart._id]) {
+            cartData[productToCart._id] = selectedQuantity; 
+        } else {
+            cartData[productToCart._id] += selectedQuantity; 
+        }
+
         req.session.cart = cartData;
+
+        res.json({ message: "Product added to cart successfully." });
 
     } catch (error) {
         console.error("Add to cart unsuccessful", error);
         res.status(400).json({ error: 'Add to cart unsuccessful' });
     }
-}
+};
+
+
 
 const displayCart = async (req, res) => {
     try {
-      const cartData = req.session.cart || [];
-  
-      if (cartData.length === 0) {
-        req.session.cart = [];
-      }
-  
-      const productsInCart = await Product.find({ _id: { $in: cartData } });
+        const cartData = req.session.cart || {};
+        const productIds = Object.keys(cartData);
 
-      res.json(productsInCart);
+        if (productIds.length === 0) {
+            req.session.cart = {};
+        }
+
+        const productsInCart = await Product.find({ _id: { $in: productIds } });
+
+        const cartItems = productsInCart.map((product) => ({
+            product,
+            quantity: cartData[product._id],
+        }));
+
+        res.json(cartItems);
 
     } catch (error) {
-      console.error("Error fetching cart data:", error);
-      res.status(400).json({ error: 'Error fetching cart data' });
+        console.error("Error fetching cart data:", error);
+        res.status(400).json({ error: 'Error fetching cart data' });
     }
-  };
+};
 
 const removeProduct = async (req, res) => {
-    try {
-        const productIdToRemove = req.body._id;
-        req.session.cart = req.session.cart.filter((productId) => productId !== productIdToRemove);
-        res.json({ message: "Product deleted from cart successfully." });
-    } catch (error) {
-        res.status(400).json({ error: 'Error deleting product from cart' });
-    }
+  try {
+      const cartData = req.session.cart || {};
+      const productIdToRemove = req.body._id;
+
+      if (cartData.hasOwnProperty(productIdToRemove)) {
+          delete cartData[productIdToRemove];
+          req.session.cart = cartData;
+          res.json({ message: "Product deleted from cart successfully." });
+      } else {
+          res.status(400).json({ error: 'Product not found in cart.' });
+      }
+  } catch (error) {
+      console.error("Error deleting product from cart:", error);
+      res.status(400).json({ error: 'Error deleting product from cart' });
+  }
 }
 
 const checkOut = async (req, res) => {
@@ -101,8 +112,6 @@ const checkOut = async (req, res) => {
 
 const history = async (req, res) => {
     try {
-        // Use populate to populate the 'product' field in cartItems
-
         const transactions = await Cart.find().populate({
             path: 'cartItems.product', 
             model: 'Product', 
@@ -119,5 +128,5 @@ module.exports = {
     displayCart,
     removeProduct,
     checkOut,
-    history
+    history,
 }

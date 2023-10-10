@@ -8,37 +8,32 @@ const CartDisplay = ({
 
     const [showCart, setShowCart] = useState([]);
 
-    const filteredCart = showCart.filter((cartItem) => quantityValues[cartItem._id] > 0);
-    let totalCartPrice = 0;
-    filteredCart.forEach((product) => {
-      const itemPrice = product.price * quantityValues[product._id];
-      totalCartPrice += itemPrice;
-    });
-
-
     useEffect(() => {   
-        fetch("/api/cart")
-            .then((response) => response.json())
-            .then((data) => {
-            setShowCart(data);
-            });
+      fetch("/api/cart")
+        .then((response) => response.json())
+        .then((data) => {
+          setShowCart(data);
+    
+          const updatedQuantityValues = {};
+    
+          data.forEach((cartItem) => {
+            updatedQuantityValues[cartItem.product._id] = cartItem.quantity;
+          });
+    
+          setQuantityValues(updatedQuantityValues);
+        });
     }, [addToCart]);
 
+
     const handleQuantityChange = (newQuantity, productId, product) => {
-      if (newQuantity >= 0 && newQuantity <= product.inStock) {
+      if (newQuantity > 0 && newQuantity <= product.inStock) {
         setQuantityValues({
           ...quantityValues,
           [productId]: newQuantity,
         });
-    
-        if (newQuantity === 0) {
-          setShowCart((prevCart) =>
-            prevCart.filter((cartItem) => cartItem._id !== productId)
-          );
-        }
         setErrorMessage("");
       } else {
-        setErrorMessage("Invalid quantity");
+        setErrorMessage("Quantity must be above 0");
       }
     };
     
@@ -55,12 +50,13 @@ const CartDisplay = ({
             });
             const data = await response.json();
             setAddToCart(data);
-
-            setQuantityValues({
+            
+            
+           setQuantityValues({
               ...quantityValues,
               [cart._id]: 0,
             });
-
+          
             setErrorMessage("");
             
             if (!response.ok) {
@@ -71,15 +67,17 @@ const CartDisplay = ({
               }
           };
 
-          const handleCheckOut = async (event, cart) => {
+          const handleCheckOut = async (event) => {
             event.preventDefault();
     
-            const cartItems = filteredCart.map((cart) => ({
-              product: cart._id,
-              quantity: quantityValues[cart._id],
-              itemPrice: cart.price * quantityValues[cart._id],
+            const cartItems = showCart.map((cart) => ({
+              product: cart.product._id,
+              quantity: cart.quantity,
+              itemPrice: cart.product.price * cart.quantity,
             }));
             
+            console.log("handlecheckout console:", cartItems)
+
             try {
               const response = await fetch("/api/cart/checkout",
               {
@@ -96,18 +94,6 @@ const CartDisplay = ({
               )
               if (response.ok) {  
 
-                // Create an object to reset quantities for all cart items to 0
-                const resetQuantities = {};
-                cartItems.forEach((cartItem) => {
-                    resetQuantities[cartItem.product] = 0;
-                });
-
-                // Update quantityValues state with the resetQuantities object
-                setQuantityValues((prevQuantityValues) => ({
-                    ...prevQuantityValues,
-                    ...resetQuantities,
-                }));
-                  
                 setShowCart([])
                 setCheckoutSuccess(true)
                 setErrorMessage("");
@@ -122,6 +108,11 @@ const CartDisplay = ({
         }
       }
       
+      let totalCartPrice = 0;
+      showCart.forEach(({ product }) => {
+        const itemPrice = product.price * quantityValues[product._id];
+        totalCartPrice += itemPrice;
+      });
       
     return (
         <>
@@ -142,7 +133,8 @@ const CartDisplay = ({
             </tr>
           </thead>
           <tbody>
-            {showCart.map((product) => (
+
+            {showCart.map(({ product }) => (
               <tr key={product._id}>
                 <td>{product.name}</td>
                 <td>${(product.price * quantityValues[product._id]).toFixed(2)}</td>
@@ -150,7 +142,7 @@ const CartDisplay = ({
                 <td>
                   <input
                     type="number"
-                    min="0"
+                    min="1"
                     max={product.inStock}
                     value={quantityValues[product._id]}
                     onChange={(e) =>
@@ -189,11 +181,15 @@ const CartDisplay = ({
                             Remove
                           </button>
                         </form>
+
                       </div>
                     </div>
                   </dialog>
+                  
                 </td>
               </tr>
+
+              
             ))}
           </tbody>
         </table>
@@ -202,7 +198,7 @@ const CartDisplay = ({
   
         <button
           className="btn w-full btn-primary mt-3"
-          onClick={(event) => handleCheckOut(event, showCart)}
+          onClick={handleCheckOut}
         >
           Check Out
         </button>

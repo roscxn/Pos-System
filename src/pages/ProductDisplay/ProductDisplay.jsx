@@ -9,23 +9,17 @@ const ProductDisplay = () => {
     const [checkoutSuccess, setCheckoutSuccess] = useState(false)
     const [errorMessage, setErrorMessage] = useState("");
 
-
     useEffect(() => {
-        fetch("/api/product/")
-          .then((response) => response.json())
-          .then((data) => {
-            // Create an initial quantityValues object with product IDs as keys and 0 as initial value
-            const initialQuantityValues = {};
-            data.forEach((product) => {
-              initialQuantityValues[product._id] = 0;
-            });
-    
-            setProducts(data);
-            setQuantityValues(initialQuantityValues);
-          });
-      }, []);
+      fetch("/api/product/")
+        .then((response) => response.json())
+        .then((data) => {
+  
+          setProducts(data);
 
-    const handleAdd = async (event, product) => {
+        });
+    }, []);
+    
+        const handleAdd = async (event, product) => {
         event.preventDefault();
         try {
             const response = await fetch('/api/cart/addToCart', {
@@ -48,9 +42,7 @@ const ProductDisplay = () => {
                       ...prevQuantityValues,
                       [product._id]: (prevQuantityValues[product._id] || 0) + 1,
                     }));
-                  } else {
-                    console.log("Maximum quantity reached")
-                  }
+                  } 
                 } else {
                 console.error("Add to cart unsuccessful:", response.status, response.statusText);
             }
@@ -94,7 +86,12 @@ const ProductDisplay = () => {
               <h2 className="card-title text-base">{product.name}</h2>
               <p className="text-base">${product.price.toFixed(2)}</p>
               <p className="text-base">{product.description}</p>
-              <p className="text-sm mt-4">In Stock: {product.inStock - quantityValues[product._id]}</p>
+
+              {quantityValues[product._id] > 0 ? (
+                  <p className="text-sm mt-4">In Stock: {product.inStock - quantityValues[product._id]}</p>
+                ) : (
+                  <p className="text-sm mt-4">In Stock: {product.inStock}</p>
+                )}
 
             </div>
           </div>
